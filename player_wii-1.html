@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>RAP QUIZ — PLAYER</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════
+   WII MENU DESIGN SYSTEM — PLAYER
+═══════════════════════════════════════════════════ */
+:root {
+  --wii-bg-top:     #e8f4ff;
+  --wii-bg-bot:     #c8e8ff;
+  --wii-blue:       #5ba3dc;
+  --wii-blue-light: #a7d8ff;
+  --wii-blue-dark:  #2d6fa8;
+  --wii-white:      #ffffff;
+  --wii-grey-soft:  #eef4fb;
+  --wii-grey-mid:   #b8cfe0;
+  --wii-grey-dark:  #7a9ab5;
+  --wii-ink:        #1a2d3d;
+  --wii-ink-mid:    #4a6678;
+  --wii-ink-dim:    #8aacbe;
+
+  --rocky-acc:  #7c22e0;
+  --rocky-bg:   #f2ecff;
+  --keef-acc:   #0a8a50;
+  --keef-bg:    #e8f8f0;
+  --carti-acc:  #d42044;
+  --carti-bg:   #fff0f3;
+  --allin-acc:  #c07810;
+  --allin-bg:   #fffae8;
+  --blue-bg:    #e8f2ff;
+  --blue-acc:   #1a50c0;
+
+  --gold:   #c9921a;
+  --green:  #0a8a50;
+  --red:    #d42044;
+
+  --r:    20px;
+  --r-sm: 14px;
+  --r-xs: 10px;
+  --shadow-card: 0 4px 24px rgba(30,80,140,0.13), 0 1px 4px rgba(30,80,140,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+  --shadow-card-hover: 0 8px 36px rgba(30,80,140,0.22), 0 2px 8px rgba(30,80,140,0.1), inset 0 1px 0 rgba(255,255,255,0.95);
+  --shadow-inset: inset 0 2px 8px rgba(30,80,140,0.1), inset 0 1px 2px rgba(30,80,140,0.06);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+*:focus, *:active { outline:none !important; -webkit-tap-highlight-color:transparent !important; }
+button, input, [role="button"] { outline:none !important; -webkit-tap-highlight-color:transparent !important; -webkit-appearance:none; }
+button { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+
+html, body {
+  width:100%; height:100dvh;
+  font-family:'Nunito', sans-serif;
+  color:var(--wii-ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none !important;
+}
+
+body {
+  background:linear-gradient(180deg, var(--wii-bg-top) 0%, var(--wii-bg-bot) 100%);
+  background-attachment:fixed;
+}
+
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(255,255,255,0.6) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 75%, rgba(167,216,255,0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 60% 10%, rgba(255,255,255,0.5) 0%, transparent 50%);
+  pointer-events:none; z-index:0;
+  animation:cloudDrift 30s ease-in-out infinite alternate;
+}
+
+@keyframes cloudDrift { from{transform:translate(0,0)} to{transform:translate(8px,6px)} }
+
+html, body { height:100dvh !important; max-height:100dvh !important; overflow:hidden !important; overscroll-behavior:none !important; }
+.screen { max-height:100dvh !important; overflow:hidden !important; -webkit-overflow-scrolling:touch; overscroll-behavior:none; scrollbar-width:none; }
+.screen::-webkit-scrollbar { display:none; }
+#final-screen { overflow-y:auto !important; }
+.screen { display:none; position:fixed; inset:0; overflow-y:auto; overflow-x:hidden; z-index:1; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* ── ANIMATIONS ── */
+@keyframes popIn   { from{transform:scale(0.8) translateY(6px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+@keyframes fadeUp  { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes blink   { 0%,100%{opacity:1} 50%{opacity:0.2} }
+@keyframes btnPop  { 0%{transform:scale(1)} 40%{transform:scale(1.06)} 70%{transform:scale(0.98)} 100%{transform:scale(1)} }
+@keyframes pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(91,163,220,0.4)} 50%{box-shadow:0 0 0 8px rgba(91,163,220,0)} }
+@keyframes shimmerPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+button:active:not(:disabled) { animation:btnPop .3s cubic-bezier(.34,1.56,.64,1) !important; }
+.ans-btn:active:not(:disabled) { animation:btnPop .28s cubic-bezier(.34,1.56,.64,1) !important; }
+.av-opt:active { animation:btnPop .28s cubic-bezier(.34,1.56,.64,1) !important; }
+
+/* Credit */
+.credit { position:fixed; bottom:.75rem; right:1rem; z-index:80; pointer-events:none; font-size:.5rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:rgba(30,80,140,0.25); }
+
+/* Flash */
+.flash { position:fixed; inset:0; pointer-events:none; opacity:0; z-index:9000; transition:opacity .06s; }
+.flash.on { opacity:1; }
+
+/* ════════════════════════════════════════════════════
+   WII COMPONENTS
+════════════════════════════════════════════════════ */
+.wii-card {
+  background:var(--wii-white);
+  border-radius:var(--r);
+  box-shadow:var(--shadow-card);
+  border:1.5px solid rgba(167,216,255,0.5);
+  position:relative; overflow:hidden;
+  transition:all .22s cubic-bezier(.2,.8,.4,1);
+}
+.wii-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.75) 0%,rgba(255,255,255,0) 100%);
+  pointer-events:none; border-radius:var(--r) var(--r) 0 0;
+}
+
+.wii-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  font-family:'Nunito',sans-serif; font-weight:800;
+  font-size:clamp(0.9rem, 3vw, 1.1rem);
+  letter-spacing:0.01em; padding:.75rem 2rem;
+  border:none; cursor:pointer; border-radius:50px;
+  transition:all .18s cubic-bezier(.2,.8,.4,1);
+  position:relative; overflow:hidden;
+}
+.wii-btn::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.45) 0%,transparent 100%);
+  border-radius:50px 50px 0 0; pointer-events:none;
+}
+.wii-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+.wii-btn-primary {
+  background:linear-gradient(170deg,#6eb8f0 0%,#3a8cd0 100%); color:#fff;
+  box-shadow:0 4px 16px rgba(58,140,208,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.wii-btn-primary:hover:not(:disabled) {
+  background:linear-gradient(170deg,#82c8f8 0%,#4a9ce0 100%);
+  box-shadow:0 6px 22px rgba(58,140,208,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+  transform:translateY(-1px);
+}
+
+.wii-btn-dark {
+  background:linear-gradient(170deg,#2a4060 0%,#1a2d3d 100%); color:#fff;
+  box-shadow:0 4px 16px rgba(20,40,70,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.wii-btn-dark:hover:not(:disabled) { transform:translateY(-1px); }
+
+.wii-input {
+  width:100%; background:rgba(255,255,255,0.85);
+  border:2px solid rgba(167,216,255,0.5); border-radius:var(--r-sm);
+  font-family:'Nunito',sans-serif; font-weight:700;
+  font-size:clamp(0.9rem,3vw,1.1rem); color:var(--wii-ink);
+  padding:.7rem 1.1rem; transition:all .18s;
+  box-shadow:var(--shadow-inset); text-align:center;
+}
+.wii-input:focus { background:#fff; border-color:var(--wii-blue); box-shadow:var(--shadow-inset),0 0 0 3px rgba(91,163,220,0.2); }
+.wii-input::placeholder { color:var(--wii-ink-dim); }
+.wii-input.code { font-weight:900; font-size:clamp(1.2rem,5vw,1.6rem); letter-spacing:.28em; }
+
+.wii-label { font-size:.62rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--wii-ink-dim); display:block; margin-bottom:.4rem; }
+
+/* ════════════════════════════════════════════════════
+   JOIN SCREEN
+════════════════════════════════════════════════════ */
+#join-screen {
+  align-items:center; justify-content:center;
+  min-height:100dvh;
+  padding:clamp(1.2rem,3vw,2rem) clamp(1rem,4vw,1.5rem);
+  gap:clamp(.7rem,1.8vw,1rem);
+  text-align:center;
+}
+
+.join-logo {
+  font-weight:900; font-size:clamp(2.8rem,11vw,5.5rem);
+  line-height:.85; letter-spacing:-.03em; color:var(--wii-ink);
+  text-shadow:0 3px 0 rgba(30,80,140,0.12), 0 1px 0 rgba(255,255,255,0.9);
+  animation:fadeUp .45s cubic-bezier(.2,.8,.4,1);
+}
+.join-sub {
+  font-size:clamp(.5rem,1.8vw,.65rem); font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase;
+  color:var(--wii-blue-dark); opacity:.65;
+  animation:fadeUp .45s .08s cubic-bezier(.2,.8,.4,1) both;
+}
+
+.join-card {
+  width:100%; max-width:min(400px,94vw);
+  animation:fadeUp .45s .16s cubic-bezier(.2,.8,.4,1) both;
+}
+.join-card .wii-card { padding:clamp(1.2rem,3vw,1.8rem) clamp(1rem,3vw,1.4rem); }
+
+/* Avatar selector */
+.avatar-section { margin-bottom:1rem; }
+.avatar-row { display:flex; gap:.45rem; }
+
+.av-opt {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:.3rem;
+  cursor:pointer; padding:.5rem .35rem;
+  background:rgba(255,255,255,0.6);
+  border:2px solid rgba(167,216,255,0.4);
+  border-radius:var(--r-sm); transition:all .18s;
+  box-shadow:var(--shadow-card);
+  position:relative; overflow:hidden;
+}
+.av-opt::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.6) 0%,transparent 100%);
+  pointer-events:none;
+}
+.av-opt.sel {
+  background:#fff; border-color:var(--wii-blue);
+  box-shadow:0 0 0 2px rgba(91,163,220,0.3), var(--shadow-card-hover);
+  transform:translateY(-2px);
+}
+.av-img { width:100%; aspect-ratio:1; object-fit:cover; max-width:60px; border-radius:var(--r-xs); display:block; }
+.av-name { font-size:.42rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--wii-ink-dim); text-align:center; }
+.av-opt.sel .av-name { color:var(--wii-blue-dark); }
+
+/* ════════════════════════════════════════════════════
+   WAIT SCREEN
+════════════════════════════════════════════════════ */
+#wait-screen {
+  align-items:center; justify-content:center;
+  height:100dvh; max-height:100dvh;
+  padding:clamp(1.5rem,4vw,2.5rem) clamp(1rem,4vw,1.5rem);
+  gap:clamp(.65rem,1.8vw,1rem);
+  background:linear-gradient(170deg, var(--keef-bg) 0%, rgba(255,255,255,0.6) 100%);
+}
+
+.wait-av {
+  width:clamp(64px,15vw,88px); height:clamp(64px,15vw,88px); object-fit:contain;
+  margin:0 auto; border-radius:var(--r);
+  border:2.5px solid rgba(255,255,255,0.95);
+  box-shadow:0 8px 28px rgba(30,80,140,0.18);
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+.wait-av-emoji { font-size:clamp(2rem,8vw,3rem); text-align:center; }
+.wait-name {
+  font-weight:900; font-size:clamp(1.6rem,7vw,2.8rem);
+  line-height:.9; letter-spacing:-.02em; text-align:center;
+}
+.wait-code { font-size:.5rem; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--wii-ink-dim); text-align:center; }
+.wait-status { font-size:clamp(.6rem,2vw,.75rem); font-weight:700; letter-spacing:.1em; color:var(--keef-acc); animation:blink 1.4s ease infinite; }
+
+.wait-instructions {
+  background:#fff;
+  border:1.5px solid rgba(167,216,255,0.4);
+  border-radius:var(--r); box-shadow:var(--shadow-card);
+  padding:clamp(.9rem,2.5vw,1.2rem);
+  max-width:min(390px,92vw); width:100%; text-align:left;
+}
+.inst-title { font-weight:800; font-size:clamp(.78rem,2.5vw,.9rem); color:var(--wii-ink); margin-bottom:.75rem; }
+.inst-row { font-family:'Nunito Sans',sans-serif; font-size:clamp(.5rem,1.5vw,.58rem); line-height:2; color:var(--wii-ink-mid); margin-bottom:.15rem; }
+.inst-row b { color:var(--wii-ink); font-weight:700; }
+
+/* ════════════════════════════════════════════════════
+   ALL IN SCREEN
+════════════════════════════════════════════════════ */
+#allin-screen {
+  align-items:center; justify-content:center;
+  height:100dvh; max-height:100dvh;
+  padding:clamp(1.5rem,4vw,2.5rem) clamp(1rem,4vw,1.5rem);
+  gap:clamp(.65rem,1.6vw,.95rem);
+  background:radial-gradient(ellipse at 50% 10%, rgba(252,216,60,0.7) 0%, transparent 55%), var(--allin-bg);
+}
+
+.allin-title {
+  font-weight:900; font-size:clamp(2.5rem,12vw,5rem);
+  line-height:.82; letter-spacing:-.04em;
+  text-align:center; color:var(--wii-ink);
+}
+.allin-sub { font-size:clamp(.44rem,1.4vw,.58rem); font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--wii-ink-dim); text-align:center; }
+
+.allin-score {
+  font-weight:700; font-size:clamp(1rem,3.5vw,1.5rem); color:var(--wii-ink);
+  background:#fff; border:1.5px solid rgba(167,216,255,0.5);
+  border-radius:var(--r-sm); box-shadow:var(--shadow-card);
+  padding:.45rem 1.4rem;
+}
+
+.allin-btns { display:flex; gap:.75rem; width:100%; max-width:min(360px,92vw); }
+
+.btn-allin {
+  flex:1; font-weight:900; font-size:clamp(.85rem,3.5vw,1.05rem);
+  letter-spacing:.04em; text-transform:uppercase;
+  padding:clamp(.75rem,2.5vw,.95rem) 1rem;
+  cursor:pointer; border:none; border-radius:50px;
+  transition:all .15s; position:relative; overflow:hidden;
+}
+.btn-allin::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.4) 0%,transparent 100%);
+  pointer-events:none;
+}
+.btn-allin.yes {
+  background:linear-gradient(170deg,#2a4060,#1a2d3d); color:#fff;
+  box-shadow:0 4px 16px rgba(20,40,70,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.btn-allin.no {
+  background:rgba(255,255,255,0.75);
+  border:1.5px solid rgba(167,216,255,0.5);
+  color:var(--wii-ink-mid);
+  box-shadow:var(--shadow-card);
+}
+.btn-allin:disabled { opacity:.3; cursor:not-allowed; }
+
+.allin-decided {
+  font-size:.55rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--keef-acc); background:rgba(255,255,255,0.75);
+  border:1.5px solid rgba(10,138,80,0.25);
+  border-radius:50px; padding:.4rem 1.1rem;
+  box-shadow:var(--shadow-card);
+}
+
+/* ════════════════════════════════════════════════════
+   BUZZER SCREEN
+════════════════════════════════════════════════════ */
+#buzzer-screen {
+  align-items:center; justify-content:center;
+  height:100dvh; max-height:100dvh; text-align:center;
+  padding:clamp(2rem,5vw,3rem);
+  background:radial-gradient(ellipse at 50% 30%, rgba(120,180,255,0.6) 0%, transparent 60%), var(--blue-bg);
+}
+.buzz-title { font-weight:900; font-size:clamp(3rem,14vw,7rem); line-height:.82; letter-spacing:-.04em; color:var(--blue-acc); }
+.buzz-sub { font-size:clamp(.44rem,1.4vw,.58rem); font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:rgba(26,80,192,0.6); margin-top:1.2rem; }
+.buzz-wait { font-size:.52rem; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:rgba(26,80,192,0.5); margin-top:1.5rem; animation:blink 1.2s ease infinite; }
+
+/* ════════════════════════════════════════════════════
+   QUESTION SCREEN
+════════════════════════════════════════════════════ */
+#question-screen {
+  height:100dvh; max-height:100dvh;
+  padding:clamp(.7rem,2vw,1.1rem);
+  gap:clamp(.38rem,1vw,.55rem);
+  background-color:var(--keef-bg);
+  transition:background-color .6s ease;
+}
+#question-screen.theme-rocky { background-color:var(--rocky-bg); }
+#question-screen.theme-keef  { background-color:var(--keef-bg);  }
+#question-screen.theme-carti { background-color:var(--carti-bg); }
+#question-screen.theme-allin { background-color:var(--allin-bg); }
+
+.q-header { display:flex; align-items:center; gap:.5rem; flex-shrink:0; flex-wrap:wrap; }
+.q-num { font-size:.55rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--wii-ink-mid); white-space:nowrap; }
+.q-prog { flex:1; height:6px; background:rgba(30,80,140,0.1); border-radius:6px; min-width:40px; overflow:hidden; }
+.q-prog-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--wii-blue-light),var(--wii-blue)); transition:width .4s ease; }
+.theme-rocky .q-prog-fill { background:linear-gradient(90deg,#c4a0f8,var(--rocky-acc)); }
+.theme-keef  .q-prog-fill { background:linear-gradient(90deg,#6ed4a4,var(--keef-acc)); }
+.theme-carti .q-prog-fill { background:linear-gradient(90deg,#f8a0b0,var(--carti-acc)); }
+.theme-allin .q-prog-fill { background:linear-gradient(90deg,#f8d860,var(--allin-acc)); }
+
+.q-mode-pill { display:none; font-weight:800; font-size:.5rem; padding:.2rem .7rem; letter-spacing:.08em; border-radius:50px; }
+.q-mode-pill.buzzer { display:inline-block; background:var(--blue-acc); color:#fff; box-shadow:0 2px 8px rgba(26,80,192,0.3); }
+.q-mode-pill.allin  { display:inline-block; background:var(--allin-acc); color:#fff; box-shadow:0 2px 8px rgba(176,104,16,0.3); }
+
+/* Timer bar */
+.q-timer-row { display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+.q-timer-bar-wrap { flex:1; height:6px; background:rgba(30,80,140,0.1); border-radius:6px; overflow:hidden; }
+.q-timer-bar {
+  height:100%; border-radius:6px;
+  background:linear-gradient(90deg,var(--wii-blue-light),var(--wii-blue));
+  transition:width .1s linear, background .3s;
+}
+.theme-rocky .q-timer-bar { background:var(--rocky-acc); }
+.theme-keef  .q-timer-bar { background:var(--keef-acc); }
+.theme-carti .q-timer-bar { background:var(--carti-acc); }
+.theme-allin .q-timer-bar { background:var(--allin-acc); }
+.q-timer-num { font-weight:900; font-size:.95rem; color:var(--wii-ink); min-width:1.5rem; text-align:right; }
+
+.q-section { font-size:.5rem; font-weight:700; letter-spacing:.25em; text-transform:uppercase; color:var(--wii-ink-dim); flex-shrink:0; }
+
+.q-text {
+  font-weight:800; font-size:clamp(1rem,3.5vw,1.9rem);
+  line-height:1.2; word-break:break-word; flex-shrink:0; color:var(--wii-ink);
+  background:rgba(255,255,255,0.68);
+  border:1.5px solid rgba(167,216,255,0.4);
+  border-radius:var(--r);
+  padding:clamp(.6rem,1.8vw,1rem) clamp(.8rem,2.2vw,1.2rem);
+  box-shadow:var(--shadow-card);
+}
+
+/* Image */
+.q-img-wrap { flex-shrink:0; display:none; border-radius:var(--r); overflow:hidden; text-align:center; width:100%; aspect-ratio:4/3; max-width:360px; max-height:260px; margin:0 auto; }
+.q-img-wrap.show { display:block; }
+.q-img-wrap img { width:100%; height:100%; object-fit:contain; border-radius:var(--r); box-shadow:0 8px 28px rgba(30,80,140,0.15); display:block; margin:0 auto; }
+
+/* Answer buttons — Wii channel style */
+.q-answers {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:clamp(.35rem,1vw,.55rem); flex-shrink:0;
+}
+@media(max-width:360px){ .q-answers{ grid-template-columns:1fr; } }
+
+.ans-btn {
+  padding:clamp(.6rem,1.8vw,.85rem);
+  background:#fff;
+  border:2px solid rgba(167,216,255,0.5);
+  border-radius:var(--r-sm);
+  box-shadow:var(--shadow-card);
+  color:var(--wii-ink);
+  font-family:'Nunito Sans',sans-serif;
+  font-size:clamp(.72rem,2.2vw,.95rem);
+  font-weight:600;
+  text-align:left; cursor:pointer;
+  display:flex; align-items:flex-start; gap:.5rem;
+  transition:all .16s cubic-bezier(.2,.8,.4,1);
+  word-break:break-word; line-height:1.3;
+  -webkit-tap-highlight-color:transparent;
+  position:relative; overflow:hidden;
+}
+.ans-btn::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:45%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.7) 0%,transparent 100%);
+  pointer-events:none;
+}
+.ans-btn:hover:not(:disabled) {
+  transform:translateY(-1px) scale(1.012);
+  box-shadow:var(--shadow-card-hover);
+  border-color:var(--wii-blue-light);
+}
+.ans-btn:disabled { cursor:not-allowed; }
+
+.ans-letter {
+  font-family:'Nunito',sans-serif;
+  font-weight:900; font-size:.76rem;
+  color:var(--wii-blue);
+  flex-shrink:0; line-height:1.3;
+  background:rgba(91,163,220,0.12);
+  width:1.55rem; height:1.55rem;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%;
+}
+
+.ans-btn.selected {
+  border-color:var(--wii-blue);
+  background:rgba(232,244,255,0.95);
+  box-shadow:0 0 0 2px rgba(91,163,220,0.25), var(--shadow-card);
+}
+.theme-rocky .ans-btn.selected { border-color:var(--rocky-acc); background:rgba(240,232,255,0.95); }
+.theme-keef  .ans-btn.selected { border-color:var(--keef-acc);  background:rgba(228,248,238,0.95); }
+.theme-carti .ans-btn.selected { border-color:var(--carti-acc); background:rgba(255,240,243,0.95); }
+.theme-allin .ans-btn.selected { border-color:var(--allin-acc); background:rgba(255,250,232,0.95); }
+
+.ans-btn.correct {
+  background:rgba(228,248,238,0.95);
+  border-color:var(--keef-acc);
+  box-shadow:0 0 0 2px rgba(10,138,80,0.2), var(--shadow-card);
+}
+.ans-btn.correct .ans-letter { background:rgba(10,138,80,0.15); color:var(--keef-acc); }
+.ans-btn.wrong { opacity:.32; }
+
+/* Score row */
+.q-score-row {
+  display:flex; align-items:center; gap:.5rem; flex-shrink:0;
+  font-size:clamp(.44rem,1.3vw,.52rem); font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--wii-ink-dim);
+  background:rgba(255,255,255,0.55);
+  border:1.5px solid rgba(167,216,255,0.3);
+  border-radius:50px; padding:.28rem .85rem;
+  box-shadow:var(--shadow-card);
+  align-self:flex-start;
+}
+.q-score-val { font-weight:900; font-size:clamp(.85rem,2.8vw,1.05rem); color:var(--wii-ink); }
+.q-streak    { font-weight:900; font-size:clamp(.8rem,2.5vw,.95rem); color:var(--keef-acc); }
+
+/* ════════════════════════════════════════════════════
+   RESULT SCREEN
+════════════════════════════════════════════════════ */
+#result-screen {
+  align-items:center; justify-content:flex-start;
+  height:100dvh; max-height:100dvh; text-align:center;
+  padding:clamp(2rem,5vw,3rem) clamp(1rem,4vw,1.5rem) 3rem;
+  gap:clamp(.5rem,1.5vw,.75rem); overflow:hidden !important;
+  background:linear-gradient(180deg, var(--wii-bg-top), var(--wii-bg-bot));
+}
+.res-icon { font-size:clamp(2.5rem,10vw,3.8rem); animation:popIn .4s cubic-bezier(.34,1.56,.64,1); }
+.res-msg {
+  font-weight:900; font-size:clamp(1.8rem,9vw,4.2rem);
+  line-height:.85; letter-spacing:-.04em; color:var(--wii-ink);
+}
+.res-pts { font-weight:800; font-size:clamp(1rem,4vw,1.6rem); color:var(--gold); }
+.res-wait { font-size:.52rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--wii-ink-dim); animation:blink 1.3s ease infinite; margin-top:.3rem; }
+.res-fact {
+  font-family:'Nunito Sans',sans-serif;
+  font-size:clamp(.52rem,1.4vw,.6rem); line-height:1.9;
+  color:var(--wii-ink-mid);
+  background:#fff;
+  border:1.5px solid rgba(167,216,255,0.4);
+  border-left:4px solid var(--gold);
+  border-radius:var(--r-sm); box-shadow:var(--shadow-card);
+  padding:.75rem 1rem; text-align:left;
+  max-width:min(340px,90vw); margin:.15rem auto 0; width:100%;
+}
+
+.nearby-title { font-size:.48rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--wii-ink-dim); margin-top:.8rem; }
+.nearby-list  { margin-top:.35rem; width:100%; max-width:min(320px,90vw); }
+.nb-row {
+  display:flex; align-items:center; gap:.6rem;
+  padding:.44rem .5rem;
+  border-bottom:1.5px solid rgba(167,216,255,0.2);
+  font-size:.72rem; font-weight:600;
+}
+.nb-row.me {
+  background:#fff; border:1.5px solid rgba(91,163,220,0.3);
+  border-radius:var(--r-sm); box-shadow:var(--shadow-card);
+  margin-bottom:2px;
+}
+.nb-pos { font-weight:900; font-size:1rem; width:1.8rem; text-align:center; flex-shrink:0; }
+.nb-name { flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ════════════════════════════════════════════════════
+   FINAL SCREEN
+════════════════════════════════════════════════════ */
+#final-screen {
+  align-items:center; justify-content:flex-start;
+  min-height:100dvh; max-height:none; text-align:center;
+  padding:clamp(1.5rem,4vw,2.5rem) 1.5rem 3rem; gap:.8rem;
+  background:linear-gradient(180deg, var(--wii-bg-top), var(--wii-bg-bot));
+  overflow-y:auto !important; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+.final-av {
+  width:min(150px,38vw); height:min(150px,38vw); object-fit:contain;
+  margin:0 auto; border-radius:var(--r);
+  border:2.5px solid rgba(255,255,255,0.95);
+  box-shadow:0 8px 28px rgba(30,80,140,0.18); flex-shrink:0;
+}
+.final-name { font-weight:900; font-size:clamp(1.6rem,6vw,2.6rem); letter-spacing:-.03em; color:var(--wii-ink); word-break:break-word; flex-shrink:0; }
+.final-rank { font-size:clamp(.6rem,2vw,.8rem); font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--wii-ink-dim); flex-shrink:0; }
+.final-rank.pos1 { font-weight:900; font-size:clamp(.9rem,3.5vw,1.4rem); letter-spacing:.06em; color:var(--gold); }
+.final-rank.pos2 { font-weight:800; color:#3a6888; }
+.final-rank.pos3 { font-weight:800; color:#8a5828; }
+.final-score { font-weight:900; font-size:clamp(2.5rem,12vw,5rem); line-height:.85; letter-spacing:-.05em; color:var(--gold); flex-shrink:0; }
+.final-wait {
+  font-size:clamp(.5rem,1.5vw,.6rem); font-weight:700;
+  letter-spacing:.28em; text-transform:uppercase; color:var(--wii-ink-dim);
+  animation:blink 1.3s ease infinite;
+  background:rgba(255,255,255,0.8); border:1.5px solid rgba(167,216,255,0.4);
+  border-radius:50px; box-shadow:var(--shadow-card);
+  padding:.4rem 1.1rem; display:inline-block; flex-shrink:0;
+}
+
+.final-ranking { margin-top:.5rem; width:100%; max-width:min(340px,92vw); flex-shrink:0; padding-bottom:1.5rem; }
+.fr-row {
+  display:flex; align-items:center; gap:.6rem;
+  padding:.45rem .55rem;
+  border-bottom:1.5px solid rgba(167,216,255,0.2);
+  font-size:.72rem; font-weight:600;
+}
+.fr-row:last-child { border-bottom:none; }
+.fr-row.me {
+  background:#fff; border:1.5px solid rgba(201,146,26,0.3);
+  border-radius:var(--r-sm); box-shadow:var(--shadow-card);
+  border-left:3px solid var(--gold); margin-bottom:2px;
+}
+.fr-pos { font-weight:900; font-size:1.05rem; color:var(--wii-ink-dim); width:1.5rem; text-align:right; flex-shrink:0; }
+.fr-row:first-child .fr-pos { color:var(--gold); }
+.fr-name { flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--wii-ink); }
+.fr-score { font-weight:900; font-size:1rem; color:var(--wii-ink); flex-shrink:0; }
+.fr-row.me .fr-score { color:var(--gold); }
+
+/* ════════════════════════════════════════════════════
+   KICKED SCREEN
+════════════════════════════════════════════════════ */
+#kicked-screen {
+  align-items:center; justify-content:center;
+  height:100dvh; max-height:100dvh; text-align:center; padding:2rem;
+  background:radial-gradient(ellipse at 50% 40%, rgba(212,32,68,0.3) 0%, transparent 55%), var(--carti-bg);
+}
+.kicked-title { font-weight:900; font-size:clamp(2rem,12vw,5.5rem); color:var(--carti-acc); line-height:.82; letter-spacing:-.04em; }
+.kicked-msg { font-family:'Nunito Sans',sans-serif; font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; color:var(--wii-ink-mid); margin-top:1rem; line-height:2; }
+
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+<div class="credit">RAP QUIZ by ✌️DENIS♥️</div>
+
+<!-- JOIN -->
+<div class="screen active" id="join-screen">
+  <div class="join-logo">RAP<br>QUIZ</div>
+  <div class="join-sub">A$AP Rocky · Chief Keef · Playboi Carti</div>
+  <div class="join-card">
+    <div class="wii-card">
+      <span class="wii-label">Your name</span>
+      <input class="wii-input" id="inp-name" type="text" placeholder="your name bby"
+             maxlength="16" autocomplete="off" spellcheck="false" style="margin-bottom:.85rem">
+      <span class="wii-label">Room code</span>
+      <input class="wii-input code" id="inp-code" type="text" placeholder="CODE"
+             maxlength="8" autocomplete="off" spellcheck="false" style="margin-bottom:.9rem;text-transform:uppercase">
+      <div class="avatar-section">
+        <span class="wii-label">Choose your artist</span>
+        <div class="avatar-row" id="avatar-row">
+          <div class="av-opt sel" data-key="rocky">
+            <img class="av-img" src="asapprof.jpg" width="60" height="60">
+            <div class="av-name">A$AP ROCKY</div>
+          </div>
+          <div class="av-opt" data-key="keef">
+            <img class="av-img" src="keefprof.jpg" width="60" height="60">
+            <div class="av-name">CHIEF KEEF</div>
+          </div>
+          <div class="av-opt" data-key="carti">
+            <img class="av-img" src="cartiprof.jpg" width="60" height="60">
+            <div class="av-name">CARTI</div>
+          </div>
+        </div>
+      </div>
+      <button class="wii-btn wii-btn-dark" id="btn-join" onclick="joinGame()" style="width:100%;font-size:clamp(.95rem,3.5vw,1.1rem)">
+        JOIN →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- WAIT -->
+<div class="screen" id="wait-screen">
+  <img class="wait-av" id="wait-av" src="" alt="" style="display:none">
+  <div class="wait-av-emoji" id="wait-av-emoji">🎤</div>
+  <div class="wait-name" id="wait-name">—</div>
+  <div class="wait-code" id="wait-code">Room: —</div>
+  <div class="wait-status">Waiting for the host to start…</div>
+  <div class="wait-instructions">
+    <div class="inst-title">How does it work?</div>
+    <div class="inst-row"><b>Normal questions</b><br>The faster you answer correctly, the more points. Max 1000 pts.</div>
+    <div class="inst-row" style="margin-top:.65rem"><b>🛎️ BUZZER (Question 5)</b><br>First to answer correctly gets 1000 pts. Others get nothing.</div>
+    <div class="inst-row" style="margin-top:.65rem"><b>🎰 ALL IN (Final question)</b><br>Decide before seeing the options whether to go ALL IN.<br>ALL IN + correct = +2000 pts · ALL IN + wrong = −1000 pts</div>
+  </div>
+</div>
+
+<!-- ALL IN -->
+<div class="screen" id="allin-screen">
+  <div class="allin-title">💎 ALL IN 💎</div>
+  <div class="allin-sub">Final question — Bet before seeing the options</div>
+  <div class="allin-score">Your points: <span id="allin-pts">0</span></div>
+  <div class="allin-btns">
+    <button class="btn-allin yes" onclick="decideAllin(true)">ALL IN X2</button>
+    <button class="btn-allin no"  onclick="decideAllin(false)">Nah 🥀</button>
+  </div>
+  <div class="allin-decided" id="allin-decided" style="display:none">✓ Bet placed — waiting for host…</div>
+</div>
+
+<!-- BUZZER -->
+<div class="screen" id="buzzer-screen">
+  <div class="buzz-title">🛎️<br>BUZZER</div>
+  <div class="buzz-sub">Question 5 · First to answer correctly wins</div>
+  <div class="buzz-wait">Waiting for the host to reveal options…</div>
+</div>
+
+<!-- QUESTION -->
+<div class="screen" id="question-screen">
+  <div class="q-header">
+    <div class="q-num" id="q-num">Q1/10</div>
+    <div class="q-prog"><div class="q-prog-fill" id="q-prog-fill"></div></div>
+    <div class="q-mode-pill" id="q-mode-pill"></div>
+  </div>
+  <div class="q-timer-row">
+    <div class="q-timer-bar-wrap"><div class="q-timer-bar" id="q-timer-bar" style="width:100%"></div></div>
+    <div class="q-timer-num" id="q-timer-num">20</div>
+  </div>
+  <div class="q-section" id="q-section"></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="q-img-wrap" id="q-img-wrap"><img id="q-img" src="" alt=""></div>
+  <div class="q-answers" id="q-answers"></div>
+  <div class="q-score-row">
+    <span>Points</span>
+    <span class="q-score-val" id="q-score">0</span>
+    <span style="margin-left:.5rem">Streak</span>
+    <span class="q-streak" id="q-streak">0🔥</span>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result-screen">
+  <div class="res-icon" id="res-icon">🎯</div>
+  <div class="res-msg" id="res-msg">—</div>
+  <div class="res-pts" id="res-pts">+0 pts</div>
+  <div class="res-fact" id="res-fact" style="display:none"></div>
+  <div class="res-wait">Waiting for next question…</div>
+  <div class="nearby-title" id="nearby-title">Nearby rankings</div>
+  <div class="nearby-list" id="nearby-list"></div>
+</div>
+
+<!-- FINAL -->
+<div class="screen" id="final-screen">
+  <img class="final-av" id="final-av" src="" alt="" style="display:none">
+  <div class="final-name" id="final-name">—</div>
+  <div class="final-rank" id="final-rank" style="display:none">—</div>
+  <div class="final-score" id="final-score">0</div>
+  <div class="final-wait" id="final-wait">Waiting for results…</div>
+  <div class="final-ranking" id="final-ranking"></div>
+</div>
+
+<!-- KICKED -->
+<div class="screen" id="kicked-screen">
+  <div class="kicked-title">YOU HAVE BEEN<br>KICKED</div>
+  <div class="kicked-msg">The host removed you from the game.<br>You can rejoin if you want.</div>
+  <button class="wii-btn wii-btn-primary" onclick="resetToJoin()" style="margin-top:1.5rem;font-size:clamp(.85rem,3vw,1rem)">BACK TO START</button>
+</div>
+
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAK2UNfOHUyl7YrYE0hI9slRZdlnpPQ96s',
+  authDomain: 'trap-quiz-67.firebaseapp.com',
+  projectId: 'trap-quiz-67',
+  storageBucket: 'trap-quiz-67.firebasestorage.app',
+  messagingSenderId: '1039849877202',
+  appId: '1:1039849877202:web:19d12db33ae928ab3a870b',
+  databaseURL: 'https://trap-quiz-67-default-rtdb.firebaseio.com'
+};
+
+const _fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+const _db    = firebase.database(_fbApp);
+
+let db, gameRef;
+let playerId = null, playerName = '', playerAvatar = 'rocky', playerAvatarUrl = '';
+let myScore = 0, myStreak = 0, roomCode = '';
+let currentQIndex = -1, answered = false, myChoice = null;
+let timerInterval = null, qStartTime = 0;
+let allinDecided = false, allinWent = false;
+let currentQuestions = [], gameListener = null, kickListener = null;
+let avatarData = { rocky: 'asapprof.jpg', keef: 'keefprof.jpg', carti: 'cartiprof.jpg' };
+
+(function(){
+  const r = new URLSearchParams(window.location.search).get('room');
+  if (r) document.getElementById('inp-code').value = r.toUpperCase();
+})();
+
+document.getElementById('avatar-row').addEventListener('click', e => {
+  const opt = e.target.closest('.av-opt');
+  if (!opt) return;
+  document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('sel'));
+  opt.classList.add('sel');
+  playerAvatar = opt.dataset.key;
+});
+
+async function joinGame() {
+  playerName = document.getElementById('inp-name').value.trim();
+  roomCode   = document.getElementById('inp-code').value.trim().toUpperCase();
+  if (!playerName) { alert('Enter your name'); return; }
+  if (!roomCode)   { alert('Enter the room code'); return; }
+  const btn = document.getElementById('btn-join');
+  btn.disabled = true; btn.textContent = 'Connecting...';
+  const resetBtn = () => { btn.disabled = false; btn.textContent = 'JOIN →'; };
+  try {
+    db = _db; gameRef = db.ref('rooms/' + roomCode);
+    const statusSnap = await gameRef.child('status').once('value');
+    if (!statusSnap.exists()) { alert('Room "' + roomCode + '" not found. Make sure the host has launched the game.'); resetBtn(); return; }
+    const avSnap = await gameRef.child('avatars').once('value');
+    const avs = avSnap.val() || {};
+    Object.keys(avs).forEach(k => { if (avs[k]) avatarData[k] = avs[k]; });
+    playerAvatarUrl = avatarData[playerAvatar] || '';
+    const qSnap = await gameRef.child('questions').once('value');
+    currentQuestions = qSnap.val() || [];
+    playerId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    await gameRef.child('players/' + playerId).set({ name: playerName, avatarKey: playerAvatar, avatarUrl: playerAvatarUrl, score: 0, streak: 0 });
+    resetBtn(); showScreen('wait-screen'); renderWaitScreen(); listenKick(); listenGame();
+  } catch(e) { alert('Connection error: ' + e.message); resetBtn(); playerId = null; }
+}
+
+function renderWaitScreen() {
+  document.getElementById('wait-name').textContent = playerName;
+  document.getElementById('wait-code').textContent = 'Room: ' + roomCode;
+  const url = playerAvatarUrl || avatarData[playerAvatar] || '';
+  if (url) {
+    document.getElementById('wait-av').src = url; document.getElementById('wait-av').style.display = 'block';
+    document.getElementById('wait-av-emoji').style.display = 'none';
+  } else {
+    document.getElementById('wait-av').style.display = 'none'; document.getElementById('wait-av-emoji').style.display = 'block';
+  }
+}
+
+function listenKick() {
+  if (!playerId) return;
+  kickListener = gameRef.child('kicked/' + playerId);
+  kickListener.on('value', snap => { if (snap.val()?.kicked === true) { kickListener.off(); showKicked(); } });
+}
+
+function showKicked() {
+  clearInterval(timerInterval);
+  if (gameListener) gameRef.off('value', gameListener);
+  showScreen('kicked-screen');
+}
+
+function resetToJoin() {
+  if (playerId) {
+    gameRef.child('players/' + playerId).remove().catch(()=>{});
+    gameRef.child('answers/' + playerId).remove().catch(()=>{});
+    gameRef.child('kicked/' + playerId).remove().catch(()=>{});
+    gameRef.child('allinDecisions/' + playerId).remove().catch(()=>{});
+  }
+  if (gameListener) gameRef.off('value', gameListener);
+  clearInterval(timerInterval);
+  playerId = null; playerName = ''; roomCode = '';
+  myScore = 0; myStreak = 0; currentQIndex = -1;
+  answered = false; allinDecided = false;
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-code').value = '';
+  showScreen('join-screen');
+}
+
+function listenGame() {
+  gameListener = gameRef.on('value', snap => {
+    const g = snap.val();
+    if (!g) return;
+    const me = g.players?.[playerId];
+    if (me && g.status !== 'revealed') { myScore = me.score || 0; myStreak = me.streak || 0; }
+    if (g.questions && g.questions.length > 0) currentQuestions = g.questions;
+    const status = g.status, qIdx = g.currentQ;
+    if (status === 'lobby') { showScreen('wait-screen'); return; }
+    if (status === 'question_thinking' && g.mode === 'allin') {
+      if (allinDecided) return;
+      document.getElementById('allin-pts').textContent = myScore;
+      showScreen('allin-screen'); document.getElementById('allin-decided').style.display = 'none'; return;
+    }
+    if (status === 'question_thinking' && g.mode === 'buzzer') { showScreen('buzzer-screen'); return; }
+    if (status === 'question') {
+      const q = currentQuestions[qIdx];
+      if (!q) return;
+      if (qIdx !== currentQIndex) {
+        currentQIndex = qIdx; answered = false; myChoice = null; allinDecided = false; allinWent = false;
+        clearInterval(timerInterval); renderQuestion(qIdx, q, g.questionStart || Date.now());
+      } else if (g.optionsVisible && !answered) { renderQuestion(qIdx, q, g.questionStart || Date.now()); }
+      return;
+    }
+    if (status === 'revealed') { clearInterval(timerInterval); const q = currentQuestions[qIdx]; if (q) showResult(q, g.correctAnswer, g.scores); return; }
+    if (['results_pending','results_last','results_middle','results_losers','results_3rd','results_2nd','results'].includes(status)) { showFinal(g); return; }
+  });
+}
+
+function decideAllin(goAllin) {
+  if (allinDecided) return;
+  allinDecided = true; allinWent = goAllin;
+  document.getElementById('allin-decided').style.display = 'block';
+  document.querySelectorAll('.btn-allin').forEach(b => b.disabled = true);
+  if (goAllin) gameRef.child('allinDecisions/' + playerId).set({ allin: true, time: Date.now() });
+}
+
+function renderQuestion(idx, q, startTime) {
+  showScreen('question-screen'); qStartTime = startTime;
+  document.getElementById('q-num').textContent = 'Q' + (idx+1) + '/' + currentQuestions.length;
+  document.getElementById('q-prog-fill').style.width = (((idx+1)/currentQuestions.length)*100) + '%';
+  document.getElementById('q-section').textContent = q.section || '';
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-score').textContent = myScore;
+  document.getElementById('q-streak').textContent = myStreak + '🔥';
+  var qs = document.getElementById('question-screen');
+  qs.classList.remove('theme-rocky','theme-keef','theme-carti','theme-allin');
+  var s = (q.section||'').toLowerCase();
+  if      (s.includes('rocky')||s.includes('a$ap')) qs.classList.add('theme-rocky');
+  else if (s.includes('keef'))                       qs.classList.add('theme-keef');
+  else if (s.includes('carti'))                      qs.classList.add('theme-carti');
+  else if (q.mode==='allin'||s.includes('final'))    qs.classList.add('theme-allin');
+  else qs.classList.add('theme-keef');
+  const pill = document.getElementById('q-mode-pill');
+  pill.className = 'q-mode-pill';
+  if (q.mode==='buzzer') { pill.classList.add('buzzer'); pill.textContent='🔔 BUZZER'; }
+  else if (q.mode==='allin') { pill.classList.add('allin'); pill.textContent='⚡ ALL IN'; }
+  const imgWrap = document.getElementById('q-img-wrap');
+  if (q.image) { document.getElementById('q-img').src = q.image; imgWrap.classList.add('show'); }
+  else imgWrap.classList.remove('show');
+  const letters = ['A','B','C','D'];
+  document.getElementById('q-answers').innerHTML = (q.options||[]).map((opt,i) =>
+    `<button class="ans-btn" id="pans-${i}" onclick="submitAnswer(${i})" ${answered?'disabled':''}>
+      <span class="ans-letter">${letters[i]}</span>${opt}
+    </button>`).join('');
+  if (answered && myChoice !== null) document.getElementById('pans-'+myChoice)?.classList.add('selected');
+  clearInterval(timerInterval);
+  const elapsed = Math.max(0, (Date.now()-startTime)/1000);
+  const remaining = Math.max(0, 20-elapsed);
+  startPlayerTimer(remaining, 20);
+}
+
+function startPlayerTimer(remaining, total) {
+  const barEl = document.getElementById('q-timer-bar');
+  const numEl = document.getElementById('q-timer-num');
+  let t = remaining;
+  barEl.style.transition = 'none';
+  barEl.style.width = (t/total*100) + '%';
+  numEl.textContent = Math.ceil(t);
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    t -= 0.1;
+    barEl.style.transition = 'width .1s linear, background .3s';
+    barEl.style.width = Math.max(0, t/total*100) + '%';
+    numEl.textContent = Math.max(0, Math.ceil(t));
+    if (t <= 5) barEl.style.background = 'var(--red)';
+    if (t <= 0) clearInterval(timerInterval);
+  }, 100);
+}
+
+function submitAnswer(choice) {
+  if (answered) return;
+  answered = true; myChoice = choice;
+  document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
+  document.getElementById('pans-'+choice)?.classList.add('selected');
+  playChooseSound();
+  gameRef.child('answers/'+playerId).set({ choice, time: Date.now() });
+}
+
+let _resultShownForQ = -1;
+function showResult(q, correctAnswer, scores) {
+  if (_resultShownForQ === currentQIndex) return;
+  _resultShownForQ = currentQIndex;
+  showScreen('result-screen'); clearInterval(timerInterval);
+  const isCorrect = myChoice === correctAnswer;
+  const myData    = scores?.[playerId];
+  const newScore  = myData?.score    ?? myScore;
+  const gained    = myData?.ptsGained ?? 0;
+  const newStreak = myData?.streak   ?? (isCorrect ? myStreak+1 : 0);
+  myScore = newScore; myStreak = newStreak;
+  document.getElementById('res-icon').textContent = isCorrect ? '✅' : '❌';
+  document.getElementById('res-msg').textContent  = isCorrect ? 'CORRECT!' : 'WRONG';
+  document.getElementById('res-pts').textContent  = isCorrect ? '+'+gained+' pts'+(newStreak>1?' 🔥x'+newStreak:'') : '+0 pts';
+  const factEl = document.getElementById('res-fact');
+  if (factEl) { factEl.textContent = q.fact||''; factEl.style.display = q.fact?'':'none'; }
+  if (isCorrect) playCorrectSound(); else playWrongSound();
+  triggerFlash(isCorrect ? 'rgba(0,255,136,0.15)' : 'rgba(255,45,85,0.1)');
+  const isLast = currentQIndex >= currentQuestions.length-1;
+  const nearbyTitle = document.getElementById('nearby-title');
+  const nearbyList  = document.getElementById('nearby-list');
+  if (!scores || isLast || Object.keys(scores).length===0) { nearbyTitle.style.display='none'; nearbyList.innerHTML=''; return; }
+  const sorted = Object.entries(scores).sort(([,a],[,b])=>(b.score||0)-(a.score||0));
+  if (sorted.length<=1) { nearbyTitle.style.display='none'; nearbyList.innerHTML=''; return; }
+  const myIdx = sorted.findIndex(([pid])=>pid===playerId);
+  const ci = myIdx===-1?0:myIdx;
+  let from=0, to=sorted.length;
+  if (sorted.length>5) { from=Math.max(0,ci-2); to=Math.min(sorted.length,from+5); if (to===sorted.length) from=Math.max(0,sorted.length-5); }
+  nearbyTitle.style.display='';
+  nearbyList.innerHTML = sorted.slice(from,to).map(([pid,p],ri) => {
+    const rank=from+ri+1, isMe=pid===playerId;
+    const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.';
+    return `<div class="nb-row${isMe?' me':''}"><div class="nb-pos">${medal}</div><div class="nb-name">${p.name||'?'}</div></div>`;
+  }).join('');
+}
+
+function showFinal(g) {
+  showScreen('final-screen');
+  document.getElementById('final-screen').scrollTop = 0;
+  const scores = g.scores || {};
+  const sorted = Object.entries(scores).sort(([,a],[,b])=>(b.score||0)-(a.score||0));
+  const myRank = sorted.findIndex(([pid])=>pid===playerId)+1;
+  const n = sorted.length;
+  const me = scores[playerId];
+  const finalScore = me?.score ?? myScore;
+  const status = g.status;
+  document.getElementById('final-name').textContent  = playerName;
+  document.getElementById('final-score').textContent = finalScore;
+  const url = playerAvatarUrl || avatarData[playerAvatar] || '';
+  if (url) { document.getElementById('final-av').src=url; document.getElementById('final-av').style.display='block'; }
+  let myRankRevealed=false, waitText='Waiting for results…', bgColor='', rankText='';
+  const lastRevealed   = ['results_last','results_middle','results_3rd','results_2nd','results'].includes(status);
+  const middleRevealed = ['results_middle','results_3rd','results_2nd','results'].includes(status);
+  const thirdRevealed  = ['results_3rd','results_2nd','results'].includes(status);
+  const secondRevealed = ['results_2nd','results'].includes(status);
+  if (lastRevealed   && myRank===n && n>=4) { myRankRevealed=true; bgColor='radial-gradient(ellipse at 50% 50%,rgba(212,32,68,.2) 0%,transparent 70%),var(--carti-bg)'; rankText='💀 LAST PLACE'; waitText=''; }
+  if (middleRevealed && myRank>=4 && myRank<n) { myRankRevealed=true; bgColor=''; rankText='Rank #'+myRank; waitText=''; }
+  if (thirdRevealed  && myRank===3) { myRankRevealed=true; bgColor='radial-gradient(ellipse at 50% 50%,rgba(180,100,40,.25) 0%,transparent 70%),#faf0e8'; rankText='🥉 3RD PLACE'; waitText=''; }
+  if (secondRevealed && myRank===2) { myRankRevealed=true; bgColor='radial-gradient(ellipse at 50% 50%,rgba(180,180,180,.25) 0%,transparent 70%),#edf2fa'; rankText='🥈 2ND PLACE'; waitText=''; }
+  if (status==='results' && myRank===1) { myRankRevealed=true; bgColor='radial-gradient(ellipse at 50% 30%,rgba(252,216,60,.65) 0%,transparent 55%),var(--allin-bg)'; rankText='🏆 WINNER'; waitText=''; }
+  document.getElementById('final-screen').style.background = bgColor || 'linear-gradient(180deg,var(--wii-bg-top),var(--wii-bg-bot))';
+  const rankingEl = document.getElementById('final-ranking');
+  if (status==='results') {
+    rankingEl.innerHTML = sorted.map(([pid,p],i)=>
+      `<div class="fr-row ${pid===playerId?'me':''}"><div class="fr-pos">${i+1}</div><div class="fr-name">${p.name||'?'}</div><div class="fr-score">${p.score||0}</div></div>`
+    ).join('');
+  } else if (status!=='results_pending') {
+    rankingEl.innerHTML = sorted.map(([pid,p],i)=>{
+      let rev=false;
+      if (lastRevealed   && i===n-1 && n>=4) rev=true;
+      if (middleRevealed && i>=3 && i<n-1)   rev=true;
+      if (thirdRevealed  && i===2)            rev=true;
+      if (secondRevealed && i===1)            rev=true;
+      return rev
+        ? `<div class="fr-row ${pid===playerId?'me':''}"><div class="fr-pos">${i+1}</div><div class="fr-name">${p.name||'?'}</div><div class="fr-score">${p.score||0}</div></div>`
+        : `<div class="fr-row" style="opacity:.2"><div class="fr-pos">${i+1}</div><div class="fr-name">???</div><div class="fr-score">—</div></div>`;
+    }).join('');
+  }
+  const rankEl = document.getElementById('final-rank');
+  if (myRankRevealed) {
+    rankEl.textContent = rankText;
+    rankEl.className   = 'final-rank'+(myRank===1?' pos1':myRank===2?' pos2':myRank===3?' pos3':'');
+    rankEl.style.display = '';
+  } else { rankEl.textContent=''; rankEl.style.display='none'; }
+  document.getElementById('final-wait').textContent   = waitText;
+  document.getElementById('final-wait').style.display = waitText ? '' : 'none';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function triggerFlash(color) {
+  const f = document.getElementById('flash');
+  f.style.background=color; f.classList.add('on');
+  setTimeout(()=>f.classList.remove('on'),150);
+}
+
+let _ac=null;
+function getAC() {
+  if (!_ac||_ac.state==='closed') _ac=new(window.AudioContext||window.webkitAudioContext)();
+  if (_ac.state==='suspended') _ac.resume();
+  return _ac;
+}
+document.addEventListener('click',     ()=>{if(_ac&&_ac.state==='suspended')_ac.resume();},true);
+document.addEventListener('touchstart',()=>{if(_ac&&_ac.state==='suspended')_ac.resume();},true);
+
+function playChooseSound(){
+  const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+  o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.value=660;
+  g.gain.setValueAtTime(.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.18);
+  o.start();o.stop(ac.currentTime+.2);
+}
+function playCorrectSound(){
+  const ac=getAC();
+  [523,659,784,1047].forEach((f,i)=>{
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.type='triangle';o.frequency.value=f;
+    const d=i*.07;g.gain.setValueAtTime(.22,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d+.38);
+    o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.42);
+  });
+}
+function playWrongSound(){
+  const ac=getAC();
+  [100,85,70].forEach((f,i)=>{
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.type='sawtooth';o.frequency.value=f;
+    const d=i*.1;g.gain.setValueAtTime(.25,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d+.35);
+    o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.4);
+  });
+}
+</script>
+</body>
+</html>
