@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RAP QUIZ — HOST</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS — Wii Aesthetic
+═══════════════════════════════════════════ */
+:root{
+  --wii-blue:#009ede;--wii-blue-dk:#0074b3;--wii-blue-lt:#62d0ff;
+  --wii-bg:#e8eff6;--wii-panel:#fff;--wii-gray:#d0d8e0;--wii-gray-dk:#7a8a98;
+  --wii-text:#2c3e50;--wii-text-lt:#6a7a8a;
+  --wii-green:#48c774;--wii-red:#ff3860;--wii-gold:#f0a020;
+  --wii-sh:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --wii-sh-lg:0 8px 32px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.06);
+  --wii-sh-btn:0 4px 12px rgba(0,158,222,.28);
+  --r:20px;--r-sm:14px;
+  --rocky:#9b59b6;--keef:#27ae60;--carti:#e74c3c;--allin:#f39c12;
+  --gold-1:#ffd700;--gold-2:#c8960c;--gold-3:#ffec80;
+  --silver-1:#c0c8d8;--silver-2:#8898a8;--silver-3:#dce4ee;
+  --bronze-1:#d4914a;--bronze-2:#8b5e2a;--bronze-3:#f0c080;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+}
+html,body{width:100%;height:100dvh;font-family:'Nunito',sans-serif;color:var(--wii-text);overflow:hidden!important;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+body{
+  background:
+    radial-gradient(circle at 20% 20%,rgba(0,158,222,.07) 0%,transparent 45%),
+    radial-gradient(circle at 80% 80%,rgba(0,158,222,.05) 0%,transparent 45%),
+    linear-gradient(170deg,#e8eff6 0%,#dce6f0 50%,#d0dae8 100%);
+  background-attachment:fixed;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(0,158,222,.02) 49px,rgba(0,158,222,.02) 50px),
+    repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(0,158,222,.02) 49px,rgba(0,158,222,.02) 50px);
+}
+*:focus,*:active{outline:none!important;-webkit-tap-highlight-color:transparent!important}
+button,input,[role=button]{outline:none!important;-webkit-tap-highlight-color:transparent!important;-webkit-appearance:none;font-family:inherit}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+input{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
+
+/* ─ ANIMATIONS ─ */
+@keyframes wiiPop{0%{transform:scale(1)}40%{transform:scale(1.06)}70%{transform:scale(.98)}100%{transform:scale(1)}}
+@keyframes wiiBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes wiiSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes wiiSlideIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes wiiFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes wiiPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes wiiFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes wiiShine{0%{left:-100%}100%{left:200%}}
+@keyframes fall{from{transform:translateY(-10px) rotate(0);opacity:1}to{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes medalFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.02)}}
+@keyframes goldReveal{0%{opacity:0;transform:scale(.5) rotate(-10deg)}60%{transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes rhombusShift{0%{background-position:0 0}100%{background-position:40px 40px}}
+
+button:active:not(:disabled){animation:wiiPop .3s cubic-bezier(.34,1.56,.64,1)!important}
+
+/* ─ SCREEN SYSTEM ─ */
+.screen{display:none;position:fixed;inset:0;z-index:1;overflow:hidden}
+.screen.active{display:flex;flex-direction:column;animation:wiiFadeIn .2s ease}
+
+/* ─ WII CARD ─ */
+.wii-card{background:var(--wii-panel);border-radius:var(--r);box-shadow:var(--wii-sh);border:2px solid rgba(0,158,222,.12);position:relative;overflow:hidden}
+.wii-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--wii-blue),var(--wii-blue-lt),var(--wii-blue));border-radius:var(--r) var(--r) 0 0;z-index:2}
+
+/* ─ BUTTONS ─ */
+.btn-primary{background:linear-gradient(180deg,#00b4f0 0%,#0090d0 100%);color:#fff;border:2px solid var(--wii-blue-dk);font-weight:900;font-size:clamp(.9rem,2.5vw,1.3rem);letter-spacing:.05em;text-transform:uppercase;padding:.8rem 1.8rem;cursor:pointer;border-radius:var(--r);box-shadow:var(--wii-sh-btn);text-shadow:0 1px 2px rgba(0,0,0,.15);position:relative;overflow:hidden;transition:filter .15s}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed}
+.btn-primary::after{content:'';position:absolute;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);left:-100%;animation:wiiShine 2.5s ease-in-out infinite;pointer-events:none}
+.btn-ghost{background:linear-gradient(180deg,#f8f8f8 0%,#e8e8e8 100%);border:2px solid var(--wii-gray);color:var(--wii-text);font-weight:800;font-size:clamp(.8rem,2vw,1.1rem);letter-spacing:.05em;text-transform:uppercase;padding:.7rem 1.8rem;cursor:pointer;border-radius:var(--r);box-shadow:var(--wii-sh);transition:all .14s}
+.btn-ghost:hover{border-color:var(--wii-blue);color:var(--wii-blue)}
+
+/* ─ INPUTS ─ */
+.wii-input{width:100%;background:#f5f8fb;border:2px solid var(--wii-gray);color:var(--wii-text);font-family:'Nunito',sans-serif;font-weight:800;font-size:clamp(1.4rem,6vw,2.2rem);letter-spacing:.35em;text-align:center;padding:.7rem 1rem;outline:none;transition:all .2s;border-radius:var(--r-sm)}
+.wii-input::placeholder{color:rgba(44,62,80,.2)}
+.wii-input:focus{background:#fff;border-color:var(--wii-blue);box-shadow:0 0 0 4px rgba(0,158,222,.15)}
+.wii-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--wii-gray-dk);margin-bottom:.45rem;text-align:left;display:block;font-weight:700}
+
+/* ─ MISC ─ */
+.credit{position:fixed;bottom:.5rem;right:.7rem;z-index:80;pointer-events:none;font-size:.45rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(44,62,80,.22);font-weight:700}
+.flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:9000;transition:opacity .05s}
+.flash.on{opacity:1}
+.stars{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:700}
+.star{position:absolute;width:4px;height:4px;border-radius:50%;animation:fall linear forwards}
+
+/* ─ RHOMBUS PATTERN ─ */
+.rhombus-bg{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    linear-gradient(45deg, var(--rhomb-a) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--rhomb-a) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--rhomb-a) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--rhomb-a) 75%);
+  background-size:30px 30px;
+  background-position:0 0, 0 15px, 15px -15px, -15px 0px;
+  opacity:.35;
+  border-radius:inherit;
+}
+
+/* ════════════════════════════════════════════
+   SETUP SCREEN
+════════════════════════════════════════════ */
+#setup-screen{align-items:center;justify-content:center;text-align:center;padding:clamp(1.5rem,4vw,3rem);gap:clamp(.8rem,2vw,1.2rem)}
+.setup-logo{font-weight:900;font-size:clamp(3.5rem,14vmin,8rem);line-height:.82;letter-spacing:-.03em;color:var(--wii-blue);text-shadow:0 3px 0 rgba(0,116,179,.2);animation:wiiFloat 3s ease-in-out infinite}
+.setup-sub{font-size:clamp(.48rem,1.5vw,.65rem);letter-spacing:.35em;text-transform:uppercase;color:var(--wii-gray-dk);font-weight:700}
+.config-box{background:var(--wii-panel);border-radius:var(--r);box-shadow:var(--wii-sh-lg);border:2px solid rgba(0,158,222,.15);padding:clamp(1.2rem,3vw,2rem) clamp(1rem,3vw,1.5rem);width:100%;max-width:min(460px,92vw);position:relative;overflow:hidden}
+.config-box::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--wii-blue),var(--wii-blue-lt),var(--wii-blue));border-radius:var(--r) var(--r) 0 0}
+
+/* ════════════════════════════════════════════
+   LOBBY SCREEN
+════════════════════════════════════════════ */
+#lobby-screen{height:100dvh;padding:clamp(.8rem,2.5vw,1.4rem);gap:clamp(.5rem,1.5vh,.9rem);overflow:hidden}
+.lobby-header{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem;flex-shrink:0}
+.lobby-title{font-weight:900;font-size:clamp(1.4rem,5vw,2.8rem);line-height:.92;letter-spacing:-.02em;color:var(--wii-blue)}
+.lobby-url{color:var(--wii-blue-dk);font-size:clamp(.4rem,.9vw,.54rem);margin-top:.3rem;word-break:break-all;max-width:420px;font-weight:600}
+
+/* Two separate pill boxes for code and count, top right */
+.lobby-info-pills{display:flex;gap:.5rem;flex-shrink:0}
+.lobby-pill{text-align:center;background:var(--wii-panel);border:2px solid rgba(0,158,222,.15);border-radius:var(--r);padding:.6rem 1rem;box-shadow:var(--wii-sh);min-width:80px}
+.lbl-sm{font-size:.46rem;letter-spacing:.35em;text-transform:uppercase;color:var(--wii-gray-dk);margin-bottom:.12rem;font-weight:700}
+.lobby-code{font-weight:900;font-size:clamp(1.8rem,6vw,3.2rem);color:var(--wii-blue);letter-spacing:.16em;line-height:1}
+.player-count{font-weight:900;font-size:clamp(1.8rem,6vw,3.2rem);color:var(--wii-blue);line-height:1}
+
+.sec-title{font-size:.46rem;letter-spacing:.35em;text-transform:uppercase;color:var(--wii-gray-dk);font-weight:700;flex-shrink:0}
+.players-grid{display:flex;flex-wrap:wrap;gap:.4rem;flex:1;overflow-y:auto;overflow-x:hidden;align-content:flex-start;scrollbar-width:thin;scrollbar-color:rgba(0,158,222,.2) transparent}
+.player-chip{background:var(--wii-panel);border:2px solid var(--wii-gray);color:var(--wii-text);font-size:.64rem;letter-spacing:.04em;padding:.28rem .75rem;font-weight:700;display:flex;align-items:center;gap:.4rem;cursor:pointer;transition:all .18s;border-radius:var(--r-sm);box-shadow:0 2px 6px rgba(0,0,0,.04);animation:wiiSlideUp .3s ease-out backwards}
+.player-chip:hover{border-color:var(--wii-red);color:var(--wii-red);background:#fff5f7}
+.chip-av{width:22px;height:22px;object-fit:cover;flex-shrink:0;border-radius:50%;border:2px solid var(--wii-gray)}
+
+/* Start button bottom-left, link bottom-right */
+.lobby-bottom{display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;gap:1rem;margin-top:auto}
+.btn-launch{background:linear-gradient(180deg,#00b4f0 0%,#0090d0 100%);color:#fff;border:2px solid var(--wii-blue-dk);font-weight:900;font-size:clamp(1.1rem,3vw,1.5rem);letter-spacing:.05em;text-transform:uppercase;padding:.9rem 2.2rem;cursor:pointer;border-radius:var(--r);box-shadow:var(--wii-sh-btn);text-shadow:0 1px 2px rgba(0,0,0,.15);position:relative;overflow:hidden}
+.btn-launch::after{content:'';position:absolute;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);left:-100%;animation:wiiShine 2.5s ease-in-out infinite;pointer-events:none}
+.lobby-link-box{background:var(--wii-panel);border:2px solid rgba(0,158,222,.2);border-radius:var(--r-sm);padding:.55rem 1rem;box-shadow:var(--wii-sh);font-size:clamp(.48rem,1.1vw,.62rem);color:var(--wii-blue-dk);font-weight:700;max-width:min(380px,55vw);word-break:break-all;animation:wiiSlideUp .5s ease-out;flex-shrink:1;min-width:0}
+
+/* ════════════════════════════════════════════
+   QUESTION SCREEN — landscape side-by-side
+   LEFT: 50% (image+question) | RIGHT: 50% (answers+controls)
+════════════════════════════════════════════ */
+#question-screen{
+  height:100dvh;overflow:hidden;
+  transition:background-color .5s ease;
+  background:var(--wii-bg);
+}
+@media(orientation:landscape){
+  #question-screen{
+    flex-direction:row!important;
+    padding:clamp(.4rem,1vw,.7rem);
+    gap:clamp(.4rem,.8vw,.6rem);
+  }
+  .q-left-col{display:flex;flex-direction:column;width:50%;flex-shrink:0;gap:clamp(.2rem,.6vh,.35rem);min-width:0;overflow:hidden}
+  .q-right-col{display:flex;flex-direction:column;width:50%;flex-shrink:0;gap:clamp(.2rem,.6vh,.35rem);min-width:0;overflow:hidden;justify-content:center}
+}
+@media(orientation:portrait){
+  #question-screen{
+    flex-direction:column!important;
+    padding:clamp(.5rem,1.5vw,.8rem);
+    gap:clamp(.2rem,.8vh,.4rem);
+  }
+  .q-left-col,.q-right-col{display:contents}
+}
+
+#question-screen.theme-rocky{background:linear-gradient(170deg,#f0e6ff 0%,#e0d0f8 100%)}
+#question-screen.theme-keef{background:linear-gradient(170deg,#e0f8ea 0%,#c8f0d8 100%)}
+#question-screen.theme-carti{background:linear-gradient(170deg,#ffe8ec 0%,#ffd0d8 100%)}
+#question-screen.theme-allin{background:linear-gradient(170deg,#fff8dc 0%,#f8ecc0 100%)}
+
+.q-header{display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:wrap}
+.q-number{font-size:clamp(.46rem,1.1vmin,.58rem);letter-spacing:.2em;color:var(--wii-gray-dk);white-space:nowrap;font-weight:700}
+.q-progress{flex:1;height:5px;background:rgba(0,0,0,.06);border-radius:6px;min-width:50px;overflow:hidden}
+.q-progress-fill{height:100%;border-radius:6px;background:var(--wii-blue);transition:width .5s}
+.theme-rocky .q-progress-fill{background:var(--rocky)}
+.theme-keef .q-progress-fill{background:var(--keef)}
+.theme-carti .q-progress-fill{background:var(--carti)}
+.theme-allin .q-progress-fill{background:var(--allin)}
+.mode-pill{display:none;font-weight:800;font-size:clamp(.46rem,1.1vmin,.62rem);padding:.2rem .65rem;letter-spacing:.08em;white-space:nowrap;border-radius:20px;color:#fff}
+.mode-pill.buzzer{display:inline-block;background:var(--wii-blue)}
+.mode-pill.allin{display:inline-block;background:var(--allin)}
+.timer-ring-wrap{position:relative;width:clamp(36px,5vmin,48px);height:clamp(36px,5vmin,48px);flex-shrink:0}
+.timer-ring{transform:rotate(-90deg)}
+.timer-ring-bg{fill:none;stroke:rgba(0,0,0,.06);stroke-width:4}
+.timer-ring-fill{fill:none;stroke:var(--wii-blue);stroke-width:4;stroke-linecap:round;stroke-dasharray:138;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .3s}
+.theme-rocky .timer-ring-fill{stroke:var(--rocky)}
+.theme-keef .timer-ring-fill{stroke:var(--keef)}
+.theme-carti .timer-ring-fill{stroke:var(--carti)}
+.theme-allin .timer-ring-fill{stroke:var(--allin)}
+.timer-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(.72rem,1.8vmin,.92rem);color:var(--wii-text)}
+
+/* Question text */
+.q-question{font-weight:800;font-size:clamp(.88rem,2.5vmin,1.8rem);line-height:1.18;word-break:break-word;flex-shrink:0;color:var(--wii-text)}
+
+/* Image — 1:1 ratio, BIGGER, object-fit:fill */
+.q-img-wrap{
+  flex:1 1 auto;display:none;
+  border-radius:var(--r);overflow:hidden;
+  width:100%;
+  aspect-ratio:1/1;
+  max-width:100%;
+  max-height:clamp(120px,38vh,420px);
+  margin:0 auto;
+  border:3px solid rgba(255,255,255,.85);
+  box-shadow:var(--wii-sh),0 0 0 1px rgba(0,158,222,.08);
+}
+.q-img-wrap.show{display:block}
+.q-img-wrap img{width:100%;height:100%;object-fit:fill;display:block}
+
+/* Buzzer winner */
+.buzzer-winner-box{display:none;padding:clamp(.3rem,.7vh,.45rem) .7rem;background:var(--wii-panel);border:2px solid var(--wii-blue);border-left:5px solid var(--wii-blue);border-radius:var(--r-sm);flex-shrink:0;box-shadow:var(--wii-sh)}
+.buzzer-winner-box.show{display:block;animation:wiiSlideIn .3s ease-out}
+.bwb-label{font-size:.42rem;letter-spacing:.3em;text-transform:uppercase;color:var(--wii-gray-dk);margin-bottom:.1rem;font-weight:700}
+.bwb-name{font-weight:900;font-size:clamp(.8rem,2vmin,1.3rem);color:var(--wii-blue)}
+
+/* Missing */
+.missing-box{flex-shrink:0;padding:.3rem .6rem;background:var(--wii-panel);border:2px solid var(--wii-gray);border-radius:var(--r-sm);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.miss-title{font-size:.4rem;letter-spacing:.3em;text-transform:uppercase;color:var(--wii-gray-dk);margin-bottom:.18rem;font-weight:700}
+.miss-names{display:flex;flex-wrap:wrap;gap:.18rem}
+.m-chip{font-size:.46rem;padding:.08rem .38rem;background:#fff5f7;border:1.5px solid rgba(231,76,60,.2);color:var(--wii-red);transition:all .3s;display:flex;align-items:center;gap:.15rem;border-radius:20px;font-weight:700}
+.m-chip.done{background:#e8faf0;border-color:rgba(39,174,96,.2);color:var(--wii-green);text-decoration:line-through;opacity:.5}
+.m-av{width:11px;height:11px;object-fit:cover;border-radius:50%}
+
+/* Answer grid — ONE COLUMN, FOUR ROWS */
+.q-answers-grid{
+  display:flex;flex-direction:column;
+  gap:clamp(.3rem,.8vmin,.5rem);
+  flex:1 1 auto;
+  min-height:0;
+  overflow:hidden;
+}
+.q-answer{
+  padding:clamp(.5rem,1.4vmin,.85rem) clamp(.6rem,1.5vmin,.9rem);
+  background:var(--wii-panel);border:2px solid var(--wii-gray);border-radius:var(--r-sm);
+  box-shadow:0 3px 10px rgba(0,0,0,.05);
+  font-size:clamp(.72rem,1.8vmin,1.05rem);color:var(--wii-text);
+  display:flex;align-items:center;gap:.5rem;
+  transition:all .22s;word-break:break-word;line-height:1.28;font-weight:700;
+  flex-shrink:1;min-height:0;
+}
+.q-answer.hidden{visibility:hidden;pointer-events:none}
+.q-answer .ans-letter{font-weight:900;font-size:clamp(.72rem,1.8vmin,.95rem);color:var(--wii-blue);flex-shrink:0}
+.q-answer.correct{background:#e8faf0;border-color:var(--wii-green);border-left:5px solid var(--wii-green)}
+.q-answer.correct .ans-letter{color:var(--wii-green)}
+.q-answer.wrong{opacity:.3}
+
+/* Live footer — show opts LEFT, reveal LEFT, counter RIGHT */
+.q-controls{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-top:.3rem;border-top:2px solid rgba(0,0,0,.04);gap:.5rem;margin-top:auto}
+.q-controls-left{display:flex;gap:.4rem;align-items:center}
+.q-controls-right{display:flex;align-items:center;gap:.4rem}
+
+.btn-show-opts{background:linear-gradient(180deg,#00b4f0 0%,#0090d0 100%);color:#fff;border:2px solid var(--wii-blue-dk);font-weight:900;font-size:clamp(.65rem,1.5vmin,.88rem);letter-spacing:.05em;text-transform:uppercase;padding:.45rem 1rem;cursor:pointer;border-radius:var(--r-sm);transition:all .14s;text-shadow:0 1px 1px rgba(0,0,0,.1);box-shadow:var(--wii-sh-btn)}
+.btn-reveal-now{background:linear-gradient(180deg,#00b4f0 0%,#0090d0 100%);color:#fff;border:2px solid var(--wii-blue-dk);font-weight:900;font-size:clamp(.65rem,1.5vmin,.88rem);letter-spacing:.05em;text-transform:uppercase;padding:.45rem 1rem;cursor:pointer;border-radius:var(--r-sm);transition:all .14s;text-shadow:0 1px 1px rgba(0,0,0,.1);box-shadow:var(--wii-sh-btn)}
+.hidden-btn{display:none!important}
+
+.live-counter{display:flex;align-items:center;gap:.35rem;font-size:clamp(.44rem,1.1vmin,.55rem);letter-spacing:.15em;text-transform:uppercase;color:var(--wii-gray-dk);font-weight:700}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--wii-green);animation:wiiPulse 1s ease infinite;flex-shrink:0}
+.responses-count{font-weight:900;font-size:clamp(.85rem,2.2vmin,1.1rem);color:var(--wii-text)}
+
+/* ════════════════════════════════════════════
+   BETWEEN SCREEN
+════════════════════════════════════════════ */
+#between-screen{align-items:center;justify-content:center;text-align:center;padding:clamp(1rem,4vw,2.5rem) clamp(1rem,4vw,1.5rem);gap:clamp(.6rem,2vh,1.2rem);overflow:hidden}
+.between-reveal{font-size:clamp(.52rem,1.4vmin,.68rem);letter-spacing:.35em;text-transform:uppercase;color:var(--wii-gray-dk);font-weight:700}
+.between-answer{font-weight:900;font-size:clamp(1.3rem,5vmin,3.5rem);color:var(--wii-blue);letter-spacing:-.03em;animation:wiiSlideIn .45s cubic-bezier(.34,1.56,.64,1);word-break:break-word;padding:0 1rem}
+.between-fact{font-size:clamp(.5rem,1.3vmin,.64rem);line-height:1.9;color:var(--wii-text-lt);background:var(--wii-panel);border:2px solid var(--wii-gray);border-left:5px solid var(--wii-gold);border-radius:var(--r-sm);box-shadow:var(--wii-sh);padding:.65rem 1rem;text-align:left;max-width:min(540px,92vw);width:100%;font-weight:600}
+.between-stats{display:flex;gap:clamp(1rem,4vw,2rem);justify-content:center;flex-wrap:wrap}
+.bstat{text-align:center}
+.bstat-num{font-weight:900;font-size:clamp(1.5rem,6vmin,3rem);display:block;letter-spacing:-.03em}
+.bstat-label{font-size:clamp(.43rem,1.2vmin,.55rem);letter-spacing:.25em;text-transform:uppercase;color:var(--wii-gray-dk);font-weight:700}
+
+/* ════════════════════════════════════════════
+   RESULTS SCREEN — METALLIC podium
+════════════════════════════════════════════ */
+#results-screen{
+  height:100dvh;overflow:hidden;
+  padding:clamp(.6rem,1.5vw,1rem);
+  gap:clamp(.3rem,1vh,.6rem);
+  background:var(--wii-bg);
+  position:relative;
+}
+@media(orientation:landscape){
+  #results-screen{flex-direction:row!important;align-items:stretch}
+  .results-left{display:flex;flex-direction:column;flex:1;min-width:0;gap:clamp(.3rem,.8vh,.5rem)}
+  .results-right{display:flex;flex-direction:column;flex:1.2;min-width:0;gap:clamp(.3rem,.8vh,.5rem);align-items:center;justify-content:center}
+}
+@media(orientation:portrait){
+  .results-left,.results-right{display:contents}
+}
+
+.results-title{font-weight:900;font-size:clamp(1.3rem,4.5vmin,3rem);line-height:.88;letter-spacing:-.03em;color:var(--wii-blue);flex-shrink:0}
+.rev-btns{display:flex;flex-wrap:wrap;gap:.35rem;flex-shrink:0}
+.btn-rev{background:linear-gradient(180deg,#f8f8f8 0%,#e8e8e8 100%);border:2px solid var(--wii-gray);color:var(--wii-gray-dk);font-weight:700;font-size:clamp(.52rem,1.3vmin,.72rem);letter-spacing:.08em;text-transform:uppercase;padding:.3rem .75rem;cursor:pointer;border-radius:20px;transition:all .14s}
+.btn-rev:disabled{opacity:.2;cursor:not-allowed}
+.btn-rev.active{border-color:var(--wii-blue);color:var(--wii-blue);background:#fff;box-shadow:var(--wii-sh-btn)}
+
+/* ── PODIUM — METALLIC ── */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:clamp(.25rem,1.2vw,.6rem);flex-shrink:0;height:clamp(100px,17vmin,190px)}
+.podium-place{display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.podium-avatar{border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.podium-name{font-size:clamp(.4rem,.9vmin,.55rem);letter-spacing:.03em;text-transform:uppercase;text-align:center;max-width:clamp(55px,9vw,85px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--wii-text);font-weight:700}
+.podium-score{font-weight:800;font-size:clamp(.65rem,1.6vmin,.9rem);color:var(--wii-text)}
+.podium-bar{width:clamp(46px,7.5vw,72px);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(1rem,2.5vmin,1.6rem);border-radius:var(--r-sm) var(--r-sm) 4px 4px;position:relative;overflow:hidden}
+
+/* 🥇 GOLD — metallic */
+.podium-bar.p1{
+  height:100%;
+  background:linear-gradient(170deg,#ffec80 0%,#ffd700 25%,#e8b800 50%,#ffd700 75%,#ffec80 100%);
+  color:#fff;
+  box-shadow:0 0 0 2px #b8860b,0 8px 32px rgba(240,160,32,.55),inset 0 2px 4px rgba(255,255,255,.6),inset 0 -2px 4px rgba(0,0,0,.15);
+  border:2px solid #b8860b;
+  text-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+.podium-bar.p1::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:shimmer 2.2s linear infinite;
+  pointer-events:none;z-index:1;
+}
+.podium-bar.p1::after{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(45deg,rgba(255,215,0,.3) 25%,transparent 25%),
+    linear-gradient(-45deg,rgba(255,215,0,.3) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,rgba(255,215,0,.3) 75%),
+    linear-gradient(-45deg,transparent 75%,rgba(255,215,0,.3) 75%);
+  background-size:16px 16px;
+  background-position:0 0,0 8px,8px -8px,-8px 0px;
+  opacity:.5;pointer-events:none;
+}
+.podium-avatar-p1{
+  width:clamp(42px,7.5vmin,58px);height:clamp(42px,7.5vmin,58px);
+  border:3px solid var(--gold-1);
+  box-shadow:0 0 0 2px #b8860b,0 6px 20px rgba(240,160,32,.45),0 0 20px rgba(255,215,0,.3);
+  animation:medalFloat 2.5s ease-in-out infinite;
+}
+
+/* 🥈 SILVER — METALLIC gradient */
+.podium-bar.p2{
+  height:68%;
+  background:linear-gradient(170deg,#e8eef5 0%,#c8d4e0 20%,#a0b0c0 45%,#c8d4e0 65%,#e8eef5 85%,#a0b0c0 100%);
+  border:2px solid #7a8a9a;
+  color:#4a5a6a;
+  box-shadow:0 4px 16px rgba(100,120,140,.4),0 0 0 2px rgba(140,160,180,.5),inset 0 2px 4px rgba(255,255,255,.7),inset 0 -2px 4px rgba(0,0,0,.1);
+  position:relative;
+}
+.podium-bar.p2::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.5) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:shimmer 3s linear infinite;
+  pointer-events:none;z-index:1;
+}
+.podium-bar.p2::after{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(45deg,rgba(180,200,220,.35) 25%,transparent 25%),
+    linear-gradient(-45deg,rgba(180,200,220,.35) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,rgba(180,200,220,.35) 75%),
+    linear-gradient(-45deg,transparent 75%,rgba(180,200,220,.35) 75%);
+  background-size:14px 14px;
+  background-position:0 0,0 7px,7px -7px,-7px 0px;
+  opacity:.5;pointer-events:none;border-radius:inherit;
+}
+.podium-avatar-p2{
+  width:clamp(34px,6vmin,50px);height:clamp(34px,6vmin,50px);
+  border:3px solid #c0c8d8;
+  box-shadow:0 0 0 2px #8a9aaa,0 4px 14px rgba(120,140,160,.3);
+}
+
+/* 🥉 BRONZE — metallic */
+.podium-bar.p3{
+  height:44%;
+  background:linear-gradient(170deg,#f0c080 0%,#d4914a 25%,#b87830 50%,#d4914a 75%,#f0c080 100%);
+  border:2px solid #8b5e2a;
+  color:#fff;
+  box-shadow:0 4px 14px rgba(180,100,40,.4),0 0 0 2px rgba(180,100,40,.4),inset 0 2px 4px rgba(255,255,255,.4),inset 0 -2px 4px rgba(0,0,0,.15);
+  text-shadow:0 1px 3px rgba(0,0,0,.3);
+  position:relative;
+}
+.podium-bar.p3::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:shimmer 3.5s linear infinite;
+  pointer-events:none;z-index:1;
+}
+.podium-bar.p3::after{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(45deg,rgba(212,145,74,.3) 25%,transparent 25%),
+    linear-gradient(-45deg,rgba(212,145,74,.3) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,rgba(212,145,74,.3) 75%),
+    linear-gradient(-45deg,transparent 75%,rgba(212,145,74,.3) 75%);
+  background-size:14px 14px;
+  background-position:0 0,0 7px,7px -7px,-7px 0px;
+  opacity:.5;pointer-events:none;border-radius:inherit;
+}
+.podium-avatar-p3{
+  width:clamp(28px,5vmin,42px);height:clamp(28px,5vmin,42px);
+  border:3px solid var(--bronze-1);
+  box-shadow:0 0 0 2px var(--bronze-2),0 3px 10px rgba(180,100,40,.25);
+}
+
+/* ── RANKING BOX — centered right, bigger ── */
+.ranking-box{
+  background:var(--wii-panel);
+  border:2px solid rgba(0,158,222,.12);
+  border-radius:var(--r);
+  box-shadow:var(--wii-sh-lg);
+  position:relative;
+  overflow:hidden;
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:min(500px,100%);
+}
+.ranking-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--wii-blue),var(--wii-blue-lt),var(--wii-blue));z-index:2}
+.ranking-inner{
+  overflow-y:auto;overflow-x:hidden;flex:1;padding:.5rem .75rem .75rem;
+  scrollbar-width:thin;scrollbar-color:rgba(0,158,222,.3) transparent;
+}
+.ranking-inner::-webkit-scrollbar{width:4px}
+.ranking-inner::-webkit-scrollbar-track{background:transparent}
+.ranking-inner::-webkit-scrollbar-thumb{background:rgba(0,158,222,.3);border-radius:4px}
+
+.rank-row{display:flex;align-items:center;gap:.5rem;padding:.45rem .2rem;border-bottom:1.5px solid rgba(0,0,0,.04);font-size:clamp(.58rem,1.4vmin,.76rem);font-weight:600;animation:wiiSlideUp .4s ease-out backwards}
+.rank-pos{font-weight:900;font-size:clamp(.85rem,2.2vmin,1.15rem);color:var(--wii-gray-dk);width:1.5rem;text-align:right;flex-shrink:0}
+.rank-row:nth-child(1) .rank-pos{color:var(--wii-gold)}
+.rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--wii-text)}
+.rank-score{font-weight:800;font-size:clamp(.82rem,1.9vmin,1.02rem);color:var(--wii-text);flex-shrink:0}
+.rank-bar-wrap{width:clamp(30px,6vw,80px);height:5px;background:rgba(0,0,0,.05);border-radius:5px;flex-shrink:0;overflow:hidden}
+.rank-bar-fill{height:100%;border-radius:5px;background:var(--wii-blue);transition:width 1s cubic-bezier(.16,1,.3,1)}
+
+/* ════════════════════════════════════════════
+   MODE OVERLAYS
+════════════════════════════════════════════ */
+.mode-overlay{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem}
+.mode-overlay.show{display:flex;animation:wiiFadeIn .3s}
+#buzzer-overlay{background:linear-gradient(170deg,#d0e8ff 0%,#a8d4f8 100%)}
+#allin-overlay{background:linear-gradient(170deg,#fff8dc 0%,#f8e8a0 100%)}
+.mo-title{font-weight:900;font-size:clamp(3.5rem,15vmin,10rem);line-height:.85;letter-spacing:-.03em}
+.mo-title.buzzer{color:var(--wii-blue);text-shadow:0 4px 0 rgba(0,116,179,.15)}
+.mo-title.allin{color:var(--allin);text-shadow:0 4px 0 rgba(180,120,0,.15);animation:wiiBounce 1.5s ease-in-out infinite}
+.mo-sub{font-size:clamp(.5rem,1.4vmin,.72rem);letter-spacing:.4em;text-transform:uppercase;color:var(--wii-gray-dk);margin-top:1.2rem;font-weight:700}
+
+/* ════════════════════════════════════════════
+   KICK MODAL
+════════════════════════════════════════════ */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-ov.show{display:flex;animation:wiiFadeIn .2s}
+.modal-box{background:var(--wii-panel);border:2px solid var(--wii-gray);border-top:5px solid var(--wii-red);border-radius:var(--r);padding:1.8rem;max-width:min(300px,90vw);width:90%;text-align:center;box-shadow:var(--wii-sh-lg);animation:wiiSlideIn .25s ease-out}
+.modal-title{font-weight:900;font-size:1.4rem;letter-spacing:-.02em;color:var(--wii-red);margin-bottom:.5rem}
+.modal-msg{font-size:.65rem;color:var(--wii-gray-dk);letter-spacing:.03em;margin-bottom:1.3rem;line-height:1.85;font-weight:600}
+.modal-btns{display:flex;gap:.6rem;justify-content:center}
+.mbtn{font-weight:800;font-size:.95rem;letter-spacing:.03em;text-transform:uppercase;padding:.5rem 1.2rem;cursor:pointer;border:2px solid transparent;border-radius:var(--r-sm);transition:all .14s}
+.mbtn.ok{background:linear-gradient(180deg,#ff5a7a 0%,#e02848 100%);color:#fff;border-color:#c0203a}
+.mbtn.no{background:linear-gradient(180deg,#f8f8f8 0%,#e8e8e8 100%);border-color:var(--wii-gray);color:var(--wii-gray-dk)}
+</style>
+</head>
+<body>
+<div class="flash" id="flash"></div>
+<div class="stars" id="stars"></div>
+<div class="credit">RAP QUIZ by ✌️DENIS♥️</div>
+
+<!-- BUZZER OVERLAY -->
+<div class="mode-overlay" id="buzzer-overlay">
+  <div class="mo-title buzzer">🛎️<br>BUZZER</div>
+  <div class="mo-sub">Question 5 · First to answer correctly takes it all</div>
+</div>
+<!-- ALL IN OVERLAY -->
+<div class="mode-overlay" id="allin-overlay">
+  <div class="mo-title allin">💎<br>ALL IN<br>💎</div>
+  <div class="mo-sub">Final Question · Players can bet · Double or nothing</div>
+</div>
+<!-- KICK MODAL -->
+<div class="modal-ov" id="kick-modal">
+  <div class="modal-box">
+    <div class="modal-title">Kick player</div>
+    <div class="modal-msg" id="kick-msg">Remove this player?</div>
+    <div class="modal-btns">
+      <button class="mbtn ok" onclick="confirmKick()">KICK</button>
+      <button class="mbtn no" onclick="closeKickModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen active" id="setup-screen">
+  <div class="setup-logo">RAP<br>QUIZ</div>
+  <div class="setup-sub">A$AP Rocky · Chief Keef · Playboi Carti</div>
+  <div class="config-box">
+    <label class="wii-label">Room code — players will type this</label>
+    <input class="wii-input" id="room-id" type="text" placeholder="67" maxlength="8" autocomplete="off" spellcheck="false" style="text-transform:uppercase;margin-bottom:1rem">
+    <button class="btn-primary" id="btn-init" onclick="initGame()" style="width:100%">LAUNCH GAME →</button>
+  </div>
+</div>
+
+<!-- LOBBY — code+count top-right as 2 pills, link bottom-right -->
+<div class="screen" id="lobby-screen">
+  <div class="lobby-header">
+    <div>
+      <div class="lobby-title">Waiting for<br>Players</div>
+      <div class="lobby-url" id="lobby-url"></div>
+    </div>
+    <div class="lobby-info-pills">
+      <div class="lobby-pill">
+        <div class="lbl-sm">Room code</div>
+        <div class="lobby-code" id="lobby-code">----</div>
+      </div>
+      <div class="lobby-pill">
+        <div class="lbl-sm">Connected</div>
+        <div class="player-count" id="player-count">0</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-title">Players — tap to kick</div>
+  <div class="players-grid" id="players-grid"></div>
+  <div class="lobby-bottom">
+    <button class="btn-launch" onclick="startGame()">START →</button>
+    <div class="lobby-link-box" id="lobby-link-fixed" style="display:none"></div>
+  </div>
+</div>
+
+<!-- QUESTION — 1 col answers, controls repositioned -->
+<div class="screen" id="question-screen">
+  <div class="q-left-col">
+    <div class="q-header">
+      <div class="q-number" id="q-number">Q1 / 10</div>
+      <div class="q-progress"><div class="q-progress-fill" id="q-progress-fill"></div></div>
+      <div class="mode-pill" id="mode-pill"></div>
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" width="56" height="56" viewBox="0 0 56 56">
+          <circle class="timer-ring-bg" cx="28" cy="28" r="22"/>
+          <circle class="timer-ring-fill" id="timer-ring-fill" cx="28" cy="28" r="22"/>
+        </svg>
+        <div class="timer-number" id="timer-number">20</div>
+      </div>
+    </div>
+    <div class="q-question" id="q-question"></div>
+    <div class="q-img-wrap" id="q-img-wrap"><img id="q-img" src="" alt=""></div>
+    <div class="buzzer-winner-box" id="buzzer-winner-box">
+      <div class="bwb-label">First correct! — BUZZER</div>
+      <div class="bwb-name" id="bwb-name">—</div>
+    </div>
+  </div>
+  <div class="q-right-col">
+    <div class="missing-box">
+      <div class="miss-title">Yet to answer</div>
+      <div class="miss-names" id="miss-names"></div>
+    </div>
+    <div class="q-answers-grid" id="q-answers-grid"></div>
+    <div class="q-controls">
+      <div class="q-controls-left">
+        <button class="btn-show-opts hidden-btn" id="btn-show-opts" onclick="showOptions()">SHOW OPTIONS →</button>
+        <button class="btn-reveal-now" id="btn-reveal-now" onclick="revealAnswer()">REVEAL NOW →</button>
+      </div>
+      <div class="q-controls-right">
+        <div class="live-counter">
+          <div class="live-dot"></div>
+          <span class="responses-count" id="resp-count">0</span>
+          <span>/ <span id="resp-total">0</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BETWEEN -->
+<div class="screen" id="between-screen">
+  <div class="between-reveal">Correct answer</div>
+  <div class="between-answer" id="between-answer">—</div>
+  <div class="between-fact" id="between-fact"></div>
+  <div class="between-stats">
+    <div class="bstat"><span class="bstat-num" id="bstat-correct" style="color:var(--wii-green)">0</span><span class="bstat-label">Correct</span></div>
+    <div class="bstat"><span class="bstat-num" id="bstat-wrong" style="color:var(--wii-red)">0</span><span class="bstat-label">Wrong</span></div>
+    <div class="bstat"><span class="bstat-num" id="bstat-pct" style="color:var(--wii-gold)">0%</span><span class="bstat-label">Accuracy</span></div>
+  </div>
+  <button class="btn-ghost" onclick="nextQuestion()">NEXT →</button>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="results-screen">
+  <div class="results-left">
+    <div class="results-title">Final<br>Results</div>
+    <div class="rev-btns" id="rev-btns"></div>
+    <div class="podium" id="podium"></div>
+  </div>
+  <div class="results-right">
+    <div class="ranking-box">
+      <div class="ranking-inner" id="full-ranking"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   RAP QUIZ — HOST  ·  Final build v4
+══════════════════════════════════════════════════════════════ */
+const MUSIC={lobby:'instkidcudicarti.mp3',final:'cartilocation.mp3'};
+const QUESTION_MUSIC=['asaprockytrilla.mp3','asappeso.mp3','asapangels.mp3','keeffaneto.mp3','kanyekeeflike.mp3','keefloveme.mp3','cartichoppasing.mp3','cartilost2k14.mp3','cartimileage.mp3','nineviciousriri.mp3'];
+const AVATARS={rocky:'asapprof.jpg',keef:'keefprof.jpg',carti:'cartiprof.jpg'};
+const QUESTIONS=[
+  {section:'A$AP ROCKY',q:"What is A$AP Rocky's real first name?",options:['Rocky','Rakim','Jeffrey','Ynestrosa'],correct:1,fact:'His mother named him Rakim after the legendary rapper Rakim.',image:'babyasap.jpg',mode:'normal'},
+  {section:'A$AP ROCKY',q:'How was LiveLoveA$AP released in October 2011?',options:['iTunes exclusive at $9.99','Through a record label (RCA)','Free digital download','Physical CD in New York stores'],correct:2,fact:'Free download. No label, no budget. It spread through Tumblr and blogs.',image:'liveloveasap.jpg',mode:'normal'},
+  {section:'A$AP ROCKY',q:"Who was A$AP Rocky's best friend and co-founder of A$AP Mob?",options:['P Diddy','A$AP Yams','Travis Scott','Casanova'],correct:1,fact:'A$AP Yams — the strategic mind of the mob. He passed away in 2015.',image:'yamsasap.jpg',mode:'normal'},
+  {section:'CHIEF KEEF',q:'Where was Chief Keef when he recorded the music that made him famous?',options:["A Kanye-funded Chicago studio","A juvenile detention centre in Illinois","House arrest at his grandmother's","On tour around the South Side"],correct:2,fact:"House arrest at his grandmother's. 16 years old, a webcam and basic gear.",image:'keefarrest.jpg',mode:'normal'},
+  {section:'CHIEF KEEF — 🔔 BUZZER',q:'What happened when Kanye West heard "I Don\'t Like"?',options:['Signed Keef directly to GOOD Music','Made a remix with Pusha T, Big Sean & Jadakiss','Produced the entire Finally Rich album','Gave him a one-million-dollar advance'],correct:1,fact:'Kanye made a remix with Pusha T, Big Sean and Jadakiss.',image:'yekeef.jpg',mode:'buzzer'},
+  {section:'CHIEF KEEF',q:'How did Chief Keef build his fanbase without being able to leave the house?',options:['Sending CDs to Chicago schools','Paying an FM radio DJ','Uploading music to YouTube and promoting on Facebook','Emailing demos to record labels'],correct:2,fact:'Fully DIY. YouTube for music, Facebook for promo.',image:'keefyt.jpg',mode:'normal'},
+  {section:'PLAYBOI CARTI',q:"What was Playboi Carti's original rap name?",options:['Lil Jordan','Young Carter','Sir Cartier','ASAP Carti'],correct:2,fact:'Sir Cartier — uploading from Atlanta before the A$AP connection.',image:'babysircartier.jpg',mode:'normal'},
+  {section:'PLAYBOI CARTI',q:'How did Carti meet A$AP Rocky?',options:['Rocky found him on SoundCloud','They met at a festival in Atlanta','A$AP Bari introduced them after Carti moved to NYC',"Rocky's manager signed him at an open mic"],correct:2,fact:'A$AP Bari connected them after Carti moved to New York.',image:'asapcartitogether.jpg',mode:'normal'},
+  {section:'PLAYBOI CARTI',q:'When did Playboi Carti release Die Lit?',options:['2016','2017','2018','2019'],correct:2,fact:'May 11, 2018. He dropped "Mileage" with Chief Keef.',image:'cartidielit.jpg',mode:'normal'},
+  {section:'FINAL — ⚡ ALL IN',q:'How did Rocky, Chief Keef and Playboi Carti first break through?',options:['Their parents worked in the industry','They were elite athletes who switched to music','They uploaded their music directly to the internet','They studied arts and were discovered by scouts'],correct:2,fact:'All three bypassed the traditional industry. Rocky via Tumblr. Keef via YouTube. Carti via SoundCloud.',image:'asapkeefcarti.jpg',mode:'allin'}
+];
+const FIREBASE_CONFIG={apiKey:'AIzaSyAK2UNfOHUyl7YrYE0hI9slRZdlnpPQ96s',authDomain:'trap-quiz-67.firebaseapp.com',projectId:'trap-quiz-67',storageBucket:'trap-quiz-67.firebasestorage.app',messagingSenderId:'1039849877202',appId:'1:1039849877202:web:19d12db33ae928ab3a870b',databaseURL:'https://trap-quiz-67-default-rtdb.firebaseio.com'};
+
+let db,roomId,gameRef,currentQ=-1,timerInterval=null,timeLeft=20,players={},responsesThisQ={},allinDecisions={},optionsVisible=false,revealDone=false,buzzerWinnerId=null,qStartTime=0,sortedFinal=[],kickPid=null,currentBgMusic=null;
+document.addEventListener('click',()=>{if(_ac&&_ac.state==='suspended')_ac.resume()},true);
+
+function initGame(){
+  roomId=document.getElementById('room-id').value.trim().toUpperCase();
+  if(!roomId){alert('Enter a room code!');return}
+  const btn=document.getElementById('btn-init');btn.disabled=true;btn.textContent='Connecting…';
+  const app=firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database(app);gameRef=db.ref('rooms/'+roomId);
+  const qData=QUESTIONS.map(q=>({section:q.section,q:q.q,options:q.options,correct:q.correct,fact:q.fact,image:q.image||null,mode:q.mode}));
+  gameRef.set({status:'lobby',currentQ:-1,players:{},answers:null,kicked:null,questions:qData,avatars:AVATARS}).then(()=>{
+    showScreen('lobby-screen');
+    const url=window.location.origin+window.location.pathname.replace(/[^\/]*$/,'player_final_v4.html')+'?room='+roomId;
+    document.getElementById('lobby-url').textContent=url;
+    document.getElementById('lobby-code').textContent=roomId;
+    const lf=document.getElementById('lobby-link-fixed');lf.textContent='🔗 '+url;lf.style.display='block';
+    setupLobbyListeners();playMusic(MUSIC.lobby,.35);
+  }).catch(e=>{alert('Firebase Error: '+e.message);btn.disabled=false;btn.textContent='LAUNCH GAME →'});
+}
+
+function setupLobbyListeners(){gameRef.child('players').on('value',snap=>{players=snap.val()||{};renderLobbyPlayers()})}
+function renderLobbyPlayers(){
+  document.getElementById('player-count').textContent=Object.keys(players).length;
+  document.getElementById('players-grid').innerHTML=Object.entries(players).map(([pid,p])=>
+    `<div class="player-chip" onclick="openKickModal('${pid}','${(p.name||'').replace(/'/g,"\\'")}')">
+      ${(p.avatarUrl||AVATARS[p.avatarKey])?`<img class="chip-av" src="${p.avatarUrl||AVATARS[p.avatarKey]}">`:'🎤'}
+      <span>${p.name||'?'}</span><span style="opacity:.35;font-size:.6rem">✕</span>
+    </div>`).join('')
+}
+function openKickModal(pid,name){kickPid=pid;document.getElementById('kick-msg').textContent='Remove "'+name+'" from the game?';document.getElementById('kick-modal').classList.add('show')}
+function closeKickModal(){kickPid=null;document.getElementById('kick-modal').classList.remove('show')}
+function confirmKick(){if(!kickPid)return;const pid=kickPid;gameRef.child('kicked/'+pid).set({kicked:true}).then(()=>{gameRef.child('players/'+pid).remove();gameRef.child('answers/'+pid).remove();delete players[pid];renderLobbyPlayers()});closeKickModal()}
+
+function startGame(){currentQ=-1;stopMusic();gameRef.update({status:'playing',scores:{}});nextQuestion()}
+function nextQuestion(){
+  currentQ++;responsesThisQ={};allinDecisions={};optionsVisible=false;revealDone=false;buzzerWinnerId=null;
+  if(currentQ>=QUESTIONS.length){showFinalResults();return}
+  const q=QUESTIONS[currentQ];
+  if(q.mode==='buzzer')showModeOverlay('buzzer-overlay',()=>showQuestion());
+  else if(q.mode==='allin')showModeOverlay('allin-overlay',()=>showQuestion());
+  else showQuestion();
+}
+function showModeOverlay(id,cb){
+  const ol=document.getElementById(id);ol.classList.add('show');
+  if(id==='allin-overlay'){spawnStars(40);playAllinSound()}
+  if(id==='buzzer-overlay')playBuzzerSound();
+  setTimeout(()=>{ol.classList.remove('show');cb()},3500)
+}
+function showQuestion(){
+  const q=QUESTIONS[currentQ];showScreen('question-screen');
+  document.getElementById('q-number').textContent='Q'+(currentQ+1)+' / '+QUESTIONS.length;
+  document.getElementById('q-progress-fill').style.width=(((currentQ+1)/QUESTIONS.length)*100)+'%';
+  const pill=document.getElementById('mode-pill');pill.className='mode-pill';
+  if(q.mode==='buzzer'){pill.classList.add('buzzer');pill.textContent='🔔 BUZZER'}
+  else if(q.mode==='allin'){pill.classList.add('allin');pill.textContent='⚡ ALL IN'}
+  document.getElementById('q-question').textContent=q.q;
+  const qs=document.getElementById('question-screen');
+  qs.classList.remove('theme-rocky','theme-keef','theme-carti','theme-allin');
+  const s=(q.section||'').toLowerCase();
+  if(s.includes('rocky')||s.includes('a$ap'))qs.classList.add('theme-rocky');
+  else if(s.includes('keef'))qs.classList.add('theme-keef');
+  else if(s.includes('carti'))qs.classList.add('theme-carti');
+  else if(q.mode==='allin'||s.includes('final')||s.includes('all in'))qs.classList.add('theme-allin');
+  else qs.classList.add('theme-keef');
+  const imgWrap=document.getElementById('q-img-wrap');
+  if(q.image){document.getElementById('q-img').src=q.image;imgWrap.classList.add('show')}else imgWrap.classList.remove('show');
+  document.getElementById('buzzer-winner-box').classList.remove('show');
+  const letters=['A','B','C','D'];
+  document.getElementById('q-answers-grid').innerHTML=q.options.map((opt,i)=>
+    `<div class="q-answer hidden" id="ans-${i}"><span class="ans-letter">${letters[i]}</span>${opt}</div>`).join('');
+  document.getElementById('resp-count').textContent='0';
+  document.getElementById('resp-total').textContent=Object.keys(players).length;
+  renderMissing({});
+  document.getElementById('timer-number').textContent='—';
+  document.getElementById('timer-ring-fill').style.strokeDashoffset=0;
+  document.getElementById('timer-ring-fill').style.stroke='var(--wii-gold)';
+  if(q.mode==='buzzer'||q.mode==='allin'){
+    document.getElementById('btn-show-opts').classList.remove('hidden-btn');
+    document.getElementById('btn-reveal-now').classList.add('hidden-btn');
+  }else{
+    document.getElementById('btn-show-opts').classList.add('hidden-btn');
+    document.getElementById('btn-reveal-now').classList.remove('hidden-btn');
+    showOptions();
+  }
+  const qData={currentQ,status:q.mode==='normal'?'question':'question_thinking',questionStart:q.mode==='normal'?Date.now():null,answers:null,optionsVisible:q.mode==='normal',buzzerWinner:null,buzzerWinnerName:null,mode:q.mode,image:q.image||null,fact:q.fact||'',allinDecisions:null};
+  gameRef.update(qData);
+  if(q.mode==='normal'){if(QUESTION_MUSIC[currentQ])playMusic(QUESTION_MUSIC[currentQ],.28);else stopMusic();startTimer(20);listenAnswers()}
+  else{stopMusic();listenAnswers();if(q.mode==='allin')listenAllinDecisions()}
+}
+function showOptions(){
+  const q=QUESTIONS[currentQ];optionsVisible=true;qStartTime=Date.now();
+  ['A','B','C','D'].forEach((_,i)=>document.getElementById('ans-'+i)?.classList.remove('hidden'));
+  document.getElementById('btn-show-opts').classList.add('hidden-btn');
+  document.getElementById('btn-reveal-now').classList.remove('hidden-btn');
+  gameRef.update({status:'question',optionsVisible:true,questionStart:qStartTime});
+  if(QUESTION_MUSIC[currentQ])playMusic(QUESTION_MUSIC[currentQ],.28);else stopMusic();
+  startTimer(20);
+}
+function listenAnswers(){
+  gameRef.child('answers').off();
+  gameRef.child('answers').on('value',snap=>{
+    responsesThisQ=snap.val()||{};
+    const cnt=Object.keys(responsesThisQ).length;
+    document.getElementById('resp-count').textContent=cnt;
+    renderMissing(responsesThisQ);
+    const q=QUESTIONS[currentQ];
+    if(q.mode==='buzzer'&&!buzzerWinnerId&&optionsVisible){
+      const fc=Object.entries(responsesThisQ).filter(([,a])=>a.choice===q.correct).sort(([,a],[,b])=>(a.time||0)-(b.time||0))[0];
+      if(fc){buzzerWinnerId=fc[0];const winner=players[buzzerWinnerId];document.getElementById('bwb-name').textContent=winner?winner.name:'?';document.getElementById('buzzer-winner-box').classList.add('show');gameRef.update({buzzerWinner:buzzerWinnerId,buzzerWinnerName:winner?.name||''});clearInterval(timerInterval);setTimeout(()=>revealAnswer(),1200)}
+    }
+    if(q.mode!=='buzzer'){const total=Object.keys(players).length;if(total>0&&cnt>=total&&optionsVisible&&!revealDone)revealAnswer()}
+  });
+}
+function listenAllinDecisions(){gameRef.child('allinDecisions').on('value',snap=>{allinDecisions=snap.val()||{}})}
+function renderMissing(ans){
+  document.getElementById('miss-names').innerHTML=Object.entries(players).map(([pid,p])=>
+    `<div class="m-chip ${ans[pid]?'done':''}">
+      ${p.avatarUrl?`<img class="m-av" src="${p.avatarUrl}">`:''}
+      ${p.name||'?'}
+    </div>`).join('')
+}
+function startTimer(seconds){
+  clearInterval(timerInterval);timeLeft=seconds;
+  const circ=138,ring=document.getElementById('timer-ring-fill'),numEl=document.getElementById('timer-number');
+  ring.style.strokeDasharray=circ;ring.style.strokeDashoffset=0;ring.style.stroke='var(--wii-blue)';numEl.textContent=timeLeft;
+  timerInterval=setInterval(()=>{
+    timeLeft--;numEl.textContent=Math.max(0,timeLeft);
+    ring.style.strokeDashoffset=circ*(1-Math.max(0,timeLeft)/seconds);
+    if(timeLeft<=5)ring.style.stroke='var(--wii-red)';
+    if(timeLeft<=3&&timeLeft>0)playTickSound();
+    if(timeLeft<=0){clearInterval(timerInterval);revealAnswer()}
+  },1000)
+}
+function revealAnswer(){
+  if(revealDone)return;revealDone=true;clearInterval(timerInterval);stopMusic();
+  gameRef.child('answers').off();gameRef.child('allinDecisions').off();
+  const q=QUESTIONS[currentQ];
+  q.options.forEach((_,i)=>{const el=document.getElementById('ans-'+i);if(!el)return;el.classList.remove('hidden');el.classList.add(i===q.correct?'correct':'wrong')});
+  let correctCount=0,wrongCount=0;
+  Object.entries(responsesThisQ).forEach(([pid,ans])=>{
+    if(!players[pid])return;
+    const prev=players[pid].score||0,prevStreak=players[pid].streak||0;
+    const elapsed=Math.max(0,((ans.time||qStartTime)-qStartTime)/1000);
+    let correct=false;
+    if(q.mode==='buzzer'){if(pid===buzzerWinnerId){correctCount++;players[pid].score=prev+1000;correct=true}else wrongCount++}
+    else if(q.mode==='allin'){const wa=!!(allinDecisions[pid]);if(ans.choice===q.correct){correctCount++;players[pid].score=prev+(wa?2000:1000);correct=true}else{wrongCount++;players[pid].score=Math.max(0,prev-(wa?1000:0))}}
+    else{if(ans.choice===q.correct){correctCount++;const pts=Math.max(0,Math.round(1000-elapsed*50));players[pid].score=prev+pts;correct=true}else wrongCount++}
+    players[pid].streak=correct?prevStreak+1:0;
+    players[pid].ptsGained=(players[pid].score||0)-prev;
+    gameRef.child('players/'+pid).update({score:players[pid].score||0,streak:players[pid].streak,ptsGained:players[pid].ptsGained});
+  });
+  Object.keys(players).forEach(pid=>{if(!responsesThisQ[pid]){players[pid].streak=0;players[pid].ptsGained=0;gameRef.child('players/'+pid).update({streak:0,ptsGained:0})}});
+  const scores={};Object.entries(players).forEach(([pid,p])=>{scores[pid]={name:p.name,score:p.score||0,streak:p.streak||0,ptsGained:p.ptsGained||0,avatarUrl:p.avatarUrl||null}});
+  gameRef.update({status:'revealed',correctAnswer:q.correct,scores});
+  triggerFlash(correctCount>wrongCount?'rgba(72,199,116,0.15)':'rgba(255,56,96,0.1)');
+  if(correctCount>0)playCorrectSound();
+  setTimeout(()=>showBetween(q,correctCount,wrongCount),800);
+}
+function showBetween(q,correct,wrong){
+  showScreen('between-screen');
+  document.getElementById('between-answer').textContent=q.options[q.correct];
+  document.getElementById('between-fact').textContent=q.fact||'';
+  document.getElementById('bstat-correct').textContent=correct;
+  document.getElementById('bstat-wrong').textContent=wrong;
+  const total=correct+wrong;
+  document.getElementById('bstat-pct').textContent=total?Math.round((correct/total)*100)+'%':'0%';
+}
+
+function showFinalResults(){
+  stopMusic();showScreen('results-screen');
+  if(MUSIC.final)setTimeout(()=>playMusic(MUSIC.final,.5),400);
+  sortedFinal=Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
+  const n=sortedFinal.length;
+  const scores={};Object.entries(players).forEach(([pid,p])=>{scores[pid]={name:p.name,score:p.score||0,streak:p.streak||0,ptsGained:p.ptsGained||0,avatarUrl:p.avatarUrl||null}});
+  gameRef.update({status:'results_pending',scores,totalPlayers:n});
+  const revBtns=document.getElementById('rev-btns');revBtns.innerHTML='';
+  const mkBtn=(id,label,onclick,active)=>{const b=document.createElement('button');b.className='btn-rev'+(active?' active':'');b.id=id;b.disabled=!active;b.textContent=label;b.onclick=onclick;revBtns.appendChild(b)};
+  if(n>=4)mkBtn('btn-last','💀 LAST →',revealLast,true);
+  if(n>=4)mkBtn('btn-middle','SHOW REST →',revealMiddle,false);
+  if(n>=3)mkBtn('btn-3rd','🥉 3RD PLACE →',reveal3rd,n<4);
+  mkBtn('btn-2nd','🥈 2ND PLACE →',reveal2nd,n<3);
+  mkBtn('btn-winner','🏆 WINNER →',revealWinner,n<2);
+  const max=sortedFinal[0]?.score||1;
+  document.getElementById('full-ranking').innerHTML=sortedFinal.map((p,i)=>
+    `<div class="rank-row" id="rr-${i}" style="display:none;animation-delay:${i*.05}s">
+      <div class="rank-pos">${i+1}</div>
+      ${p.avatarUrl?`<img style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--wii-gray)" src="${p.avatarUrl}">`:'<span>🎤</span>'}
+      <div class="rank-name">${p.name||'?'}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:0" data-w="${Math.round(((p.score||0)/max)*100)}%"></div></div>
+      <div class="rank-score">${p.score||0}</div>
+    </div>`).join('');
+  document.getElementById('podium').innerHTML='';
+}
+function showRow(i){const row=document.getElementById('rr-'+i);if(!row)return;row.style.display='flex';const bar=row.querySelector('.rank-bar-fill');if(bar)setTimeout(()=>bar.style.width=bar.dataset.w,50)}
+function revealLast(){
+  const li=sortedFinal.length-1;showRow(li);const lp=sortedFinal[li];
+  const scores={};Object.entries(players).forEach(([pid,p])=>{scores[pid]={name:p.name,score:p.score||0,streak:p.streak||0,ptsGained:p.ptsGained||0,avatarUrl:p.avatarUrl||null}});
+  gameRef.update({status:'results_last',revealedName:lp?.name||'',scores});
+  document.getElementById('btn-last').disabled=true;document.getElementById('btn-last').classList.remove('active');
+  const nb=document.getElementById('btn-middle')||document.getElementById('btn-3rd');if(nb){nb.disabled=false;nb.classList.add('active')}
+}
+function revealMiddle(){
+  const n=sortedFinal.length;for(let i=3;i<n-1;i++)setTimeout(()=>showRow(i),(i-3)*200);
+  const scores={};Object.entries(players).forEach(([pid,p])=>{scores[pid]={name:p.name,score:p.score||0,streak:p.streak||0,ptsGained:p.ptsGained||0,avatarUrl:p.avatarUrl||null}});
+  gameRef.update({status:'results_middle',scores});
+  document.getElementById('btn-middle').disabled=true;document.getElementById('btn-middle').classList.remove('active');
+  const nb=document.getElementById('btn-3rd');if(nb){nb.disabled=false;nb.classList.add('active')}
+}
+function revealLosers(){revealLast()}
+function reveal3rd(){showRow(2);spawnStars(20);gameRef.update({status:'results_3rd',revealedRank:3});buildPodium(false,false,true);document.getElementById('btn-3rd').disabled=true;document.getElementById('btn-3rd').classList.remove('active');document.getElementById('btn-2nd').disabled=false;document.getElementById('btn-2nd').classList.add('active')}
+function reveal2nd(){showRow(1);spawnStars(35);gameRef.update({status:'results_2nd',revealedRank:2});buildPodium(false,true,true);document.getElementById('btn-2nd').disabled=true;document.getElementById('btn-2nd').classList.remove('active');document.getElementById('btn-winner').disabled=false;document.getElementById('btn-winner').classList.add('active')}
+function revealWinner(){showRow(0);spawnStars(80);playWinSound();gameRef.update({status:'results',revealedRank:1});buildPodium(true,true,true)}
+function buildPodium(s1,s2,s3){
+  const p1=sortedFinal[0],p2=sortedFinal[1],p3=sortedFinal[2];
+  const makePlace=(p,rank,show)=>{
+    if(!p||!show)return rank===1?`<div class="podium-place"><div class="podium-bar p1" style="opacity:.15">?</div></div>`:'';
+    const avSizes={1:'podium-avatar podium-avatar-p1',2:'podium-avatar podium-avatar-p2',3:'podium-avatar podium-avatar-p3'};
+    const av=p.avatarUrl?`<img class="${avSizes[rank]}" src="${p.avatarUrl}" style="object-fit:cover">`:`<span style="font-size:clamp(1.2rem,3vmin,1.8rem)">🎤</span>`;
+    const barClass='podium-bar p'+rank;
+    return`<div class="podium-place">
+      ${av}
+      <div class="podium-name">${p.name||'?'}</div>
+      <div class="podium-score">${p.score||0}</div>
+      <div class="${barClass}">
+        <span style="position:relative;z-index:2">${rank}</span>
+      </div>
+    </div>`;
+  };
+  document.getElementById('podium').innerHTML=
+    makePlace(p2,2,s2)+makePlace(p1,1,s1)+makePlace(p3,3,s3);
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');const ll=document.getElementById('lobby-link-fixed');if(ll)ll.style.display=(id==='lobby-screen')?'block':'none'}
+function triggerFlash(color){const f=document.getElementById('flash');f.style.background=color;f.classList.add('on');setTimeout(()=>f.classList.remove('on'),150)}
+function spawnStars(n){const c=document.getElementById('stars');c.innerHTML='';for(let i=0;i<n;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'vw';s.style.animationDuration=(1.5+Math.random()*2)+'s';s.style.animationDelay=Math.random()+'s';s.style.background=['var(--wii-gold)','var(--wii-red)','var(--wii-green)','var(--wii-blue)','#fff'][Math.floor(Math.random()*5)];c.appendChild(s);setTimeout(()=>s.remove(),4000)}}
+
+let _ac=null;
+function getAC(){if(!_ac||_ac.state==='closed')_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac}
+function stopMusic(){if(currentBgMusic){currentBgMusic.pause();currentBgMusic.currentTime=0;currentBgMusic=null}}
+function playMusic(file,vol){if(currentBgMusic&&currentBgMusic._file===file&&!currentBgMusic.paused)return;stopMusic();const a=new Audio(file);a._file=file;a.loop=true;a.volume=vol||.35;a.play().catch(()=>{});currentBgMusic=a}
+function playTickSound(){const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=800;g.gain.setValueAtTime(.08,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.08);o.start();o.stop(ac.currentTime+.08)}
+function playCorrectSound(){const ac=getAC();[523,659,784,1047].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='triangle';o.frequency.value=f;const d=i*.07;g.gain.setValueAtTime(.22,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d+.38);o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.42)})}
+function playBuzzerSound(){const ac=getAC();[440,660,880,1320].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='square';o.frequency.value=f;const d=i*.06;g.gain.setValueAtTime(.12,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d+.1);o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.12)})}
+function playAllinSound(){const ac=getAC();const k=ac.createOscillator(),kg=ac.createGain();k.connect(kg);kg.connect(ac.destination);k.type='sine';k.frequency.setValueAtTime(200,ac.currentTime);k.frequency.exponentialRampToValueAtTime(40,ac.currentTime+.15);kg.gain.setValueAtTime(1,ac.currentTime);kg.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2);k.start();k.stop(ac.currentTime+.2);const sw=ac.createOscillator(),sg=ac.createGain();sw.connect(sg);sg.connect(ac.destination);sw.type='sawtooth';sw.frequency.setValueAtTime(80,ac.currentTime+.1);sw.frequency.exponentialRampToValueAtTime(880,ac.currentTime+.9);sg.gain.setValueAtTime(.16,ac.currentTime+.1);sg.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.95);sw.start(ac.currentTime+.1);sw.stop(ac.currentTime+.95)}
+function playWinSound(){const ac=getAC();[523,659,784,1047,784,1047,1319].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='triangle';o.frequency.value=f;const d=i*.1;g.gain.setValueAtTime(.22,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d+.55);o.start(ac.currentTime+d);o.stop(ac.currentTime+d+.6)})}
+</script>
+</body>
+</html>
