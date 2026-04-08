@@ -187,7 +187,7 @@ button:active:not(:disabled){animation:wiiPop .3s cubic-bezier(.34,1.56,.64,1)!i
 .theme-allin .timer-ring-fill{stroke:var(--allin)}
 .timer-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(.72rem,1.8vmin,.92rem);color:var(--wii-text)}
 
-.q-question{font-weight:800;font-size:clamp(.88rem,2.5vmin,1.8rem);line-height:1.18;word-break:break-word;flex-shrink:0;color:var(--wii-text)}
+.q-question{font-weight:800;font-size:clamp(2rem,5vmin,3.9rem);line-height:1.18;word-break:break-word;flex-shrink:0;color:var(--wii-text)}
 
 /* Image — 1:1 ratio, object-fit:fill */
 .q-img-wrap{
@@ -230,14 +230,14 @@ button:active:not(:disabled){animation:wiiPop .3s cubic-bezier(.34,1.56,.64,1)!i
   padding:clamp(.8rem,1.6vmin,1.3rem) clamp(1rem,2.3vmin,1.5rem);
   background:var(--wii-panel);border:2px solid var(--wii-gray);border-radius:var(--r-sm);
   box-shadow:0 3px 10px rgba(0,0,0,.05);
-  font-size:clamp(.72rem,1.8vmin,1.05rem);color:var(--wii-text);
+  font-size:clamp(2rem,4vmin,2.5rem);color:var(--wii-text);
   display:flex;align-items:center;gap:.5rem;
   transition:all .22s;word-break:break-word;line-height:1.28;font-weight:700;
   flex:1 1 0; /* ← each answer stretches equally */
   min-height:0;
 }
 .q-answer.hidden{visibility:hidden;pointer-events:none}
-.q-answer .ans-letter{font-weight:900;font-size:clamp(.72rem,1.8vmin,.95rem);color:var(--wii-blue);flex-shrink:0}
+.q-answer .ans-letter{font-weight:900;font-size:clamp(2rem,4vmin,2.5rem);color:var(--wii-blue);flex-shrink:0}
 .q-answer.correct{background:#e8faf0;border-color:var(--wii-green);border-left:5px solid var(--wii-green)}
 .q-answer.correct .ans-letter{color:var(--wii-green)}
 .q-answer.wrong{opacity:.3}
@@ -290,12 +290,12 @@ button:active:not(:disabled){animation:wiiPop .3s cubic-bezier(.34,1.56,.64,1)!i
 .btn-rev.active{border-color:var(--wii-blue);color:var(--wii-blue);background:#fff;box-shadow:var(--wii-sh-btn)}
 
 /* PODIUM METALLIC */
-.podium{display:flex;align-items:flex-end;justify-content:center;gap:clamp(.25rem,1.2vw,.6rem);flex-shrink:0;height:clamp(100px,17vmin,190px)}
-.podium-place{display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:clamp(1rem,2.2vw,2rem);flex-shrink:0;height:clamp(250px,40vmin,450px)}
+.podium-place{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem}
 .podium-avatar{border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 16px rgba(0,0,0,.2)}
-.podium-name{font-size:clamp(.4rem,.9vmin,.55rem);letter-spacing:.03em;text-transform:uppercase;text-align:center;max-width:clamp(55px,9vw,85px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--wii-text);font-weight:700}
-.podium-score{font-weight:800;font-size:clamp(.65rem,1.6vmin,.9rem);color:var(--wii-text)}
-.podium-bar{width:clamp(46px,7.5vw,72px);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(1rem,2.5vmin,1.6rem);border-radius:var(--r-sm) var(--r-sm) 4px 4px;position:relative;overflow:hidden}
+.podium-name{font-size:clamp(.8rem,1.8vmin,1.1rem);letter-spacing:.03em;text-transform:uppercase;text-align:center;max-width:clamp(110px,18vw,180px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--wii-text);font-weight:700}
+.podium-score{font-weight:800;font-size:clamp(1.3rem,2.6vmin,1.8rem);color:var(--wii-text)}
+.podium-bar{width:clamp(100px,13vw,144px);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(2rem,5vmin,3.2rem);border-radius:var(--r-sm) var(--r-sm) 4px 4px;position:relative;overflow:hidden}
 
 .podium-bar.p1{
   height:100%;
