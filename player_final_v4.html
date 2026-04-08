@@ -203,14 +203,14 @@ button:active:not(:disabled){animation:wiiPop .3s cubic-bezier(.34,1.56,.64,1)!i
   width:100%;
   aspect-ratio:1/1;
   max-width:100%;
-  max-height:clamp(200px,45vmin,400px);
+  max-height:clamp(500px,45vmin,700px);
   margin:0 auto;
   border:3px solid var(--wii-gray);box-shadow:var(--wii-sh);
 }
 .q-img-wrap.show{display:block}
 .q-img-wrap img{width:100%;height:100%;object-fit:fill;display:block}
 
-.q-answers{display:grid;grid-template-columns:1fr 1fr;gap:clamp(.3rem,1vmin,.55rem);flex-shrink:0;width:100%}
+.q-answers{display:grid;grid-template-columns:1fr;gap:clamp(.3rem,1vmin,.55rem);flex-shrink:0;width:100%}
 @media(max-width:360px){.q-answers{grid-template-columns:1fr}}
 .ans-btn{padding:clamp(.6rem,1.8vmin,.9rem);background:var(--wii-panel);border:2px solid var(--wii-gray);border-radius:var(--r-sm);box-shadow:0 3px 10px rgba(0,0,0,.05);color:var(--wii-text);font-family:'Nunito',sans-serif;font-size:clamp(.7rem,2.2vmin,.95rem);letter-spacing:.02em;text-align:left;cursor:pointer;display:flex;align-items:flex-start;gap:.4rem;transition:all .16s;word-break:break-word;line-height:1.3;font-weight:600;-webkit-tap-highlight-color:transparent}
 .ans-btn:disabled{cursor:not-allowed}
